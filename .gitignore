@@ -1,1 +1,3 @@
 build/*
+src/cxxopts.hpp
+tests/doctest.h

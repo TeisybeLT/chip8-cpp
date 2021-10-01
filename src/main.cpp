@@ -1,6 +1,7 @@
 #include "sdl_environment.hpp"
 #include "interpreter.hpp"
 
+#include "cxxopts.hpp"
 #include <SDL_log.h>
 #include <SDL_version.h>
 
