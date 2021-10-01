@@ -3,11 +3,13 @@
 #include <SDL_log.h>
 
 using namespace chip8;
+using namespace std::literals::chrono_literals;
 
 timer::timer(uint8_t& timer_reg, const std::chrono::nanoseconds& update_period,
 	std::function<void()> start_callback, std::function<void()> stop_callback) :
 	m_reg{timer_reg},
 	m_update_period{update_period},
+	m_accumulated_time{0ns},
 	m_start_callback{start_callback},
 	m_stop_callback{stop_callback}
 {}

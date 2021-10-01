@@ -7,6 +7,8 @@ file(DOWNLOAD https://raw.githubusercontent.com/onqtam/doctest/master/doctest/do
 	SHOW_PROGRESS
 )
 
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
 set(chip8_test_src
 	${CMAKE_SOURCE_DIR}/src/timer.cpp
 	timer_tests.cpp
