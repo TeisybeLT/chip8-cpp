@@ -5,8 +5,6 @@
 #include <SDL_log.h>
 #include <SDL_version.h>
 
-#include <memory>
-
 using namespace std::literals::string_literals;
 
 int main(int argc, char* argv[]) try
@@ -22,12 +20,9 @@ int main(int argc, char* argv[]) try
 	auto& beeper = sdl_game.create_beeper(440, 128);
 
 	// Start interpreter
-	auto chip8_interpreter = chip8::interpreter("/home/teisybe/Devel/tmp/chip8/roms/IBM Logo.ch8", interpreter_window);
-	beeper.play();
-
+	auto chip8_interpreter = chip8::interpreter("/home/teisybe/Devel/tmp/chip8/roms/IBM Logo.ch8", interpreter_window, beeper, std::chrono::duration_cast<std::chrono::nanoseconds>(1s) / 500);
 
 	chip8_interpreter.run();
-	beeper.pause();
 
 	return EXIT_SUCCESS;
 }

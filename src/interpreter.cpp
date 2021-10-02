@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstring>
+#include <functional>
 #include <fstream>
 
 using namespace chip8;
@@ -50,13 +52,36 @@ namespace
 		tick_time = std::chrono::high_resolution_clock::now();
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(tick_time - last_tick_time);
 	}
+
+	inline auto init_registers()
+	{
+		chip8::registers registers;
+		std::memset(&registers, 0, sizeof(registers));
+		registers.pc = chip8::interpreter::c_code_start;
+		return registers;
+	}
 }
 
-interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& interpreter_window) :
+interpreter::interpreter(
+	const std::filesystem::path& rom_path,
+	sdl::window& interpreter_window,
+	sdl::beeper& beeper,
+	std::chrono::nanoseconds tick_period) :
 	m_is_running{true},
 	m_interpreter_window{interpreter_window},
-	m_display{chip8::display{m_interpreter_window, 64, 32}}
+	m_display{chip8::display{m_interpreter_window, 64, 32}},
+	m_machine_tick_period{tick_period},
+	m_registers{init_registers()}
 {
+	// Set up timers
+	// Timer index 0 - delay
+	// Timer index 1 - sound
+	this->m_timers.emplace_back(this->m_registers.delay, c_timer_tick_freq);
+	this->m_timers.emplace_back(this->m_registers.sound, c_timer_tick_freq,
+		std::bind(&sdl::beeper::play, &beeper),
+		std::bind(&sdl::beeper::pause, &beeper)
+	);
+
 	// Set up memory
 	std::copy_n(chip8::font::raw_data.begin(), chip8::font::raw_data.size(), this->m_mem.begin());	
 	load_program_to_mem(rom_path, this->m_mem);
@@ -64,26 +89,41 @@ interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& int
 
 void interpreter::run()
 {
+	size_t test_count = 0;
 	bool test_tick = false;
 	auto tick_time = std::chrono::high_resolution_clock::now();
+	auto machine_tick_count = 0ns;
 
 	while (this->m_is_running)
 	{
 		const auto tick_delta = calculate_tick_delta(tick_time);
 
+		// Process everything needed for interpreter
 		this->process_events();
+		this->process_timers(tick_delta);
 
-		// Generate test checker board pattern
-		auto test_vec = std::vector<bool>(64*32, true);
-		for (size_t y = 0; y < 32; ++y)
-			for (size_t x = 0; x < 64; ++x)
-				test_vec[y * 64 + x] = (x % 2 == 0) ^ (y % 2 == test_tick);
+		// Calculate and process machine tick
+		machine_tick_count += tick_delta;
+		if (machine_tick_count >= this->m_machine_tick_period)
+		{
+			machine_tick_count -= this->m_machine_tick_period;
+			this->process_machine_tick();
 
-		m_display.draw(test_vec);
-		test_tick = !test_tick;
-		SDL_Log("tick");
+			++test_count;
+			if (test_count >= 250)
+			{
+				test_count = 0;
+				// Generate test checker board pattern
+				auto test_vec = std::vector<bool>(64*32, true);
+				for (size_t y = 0; y < 32; ++y)
+					for (size_t x = 0; x < 64; ++x)
+						test_vec[y * 64 + x] = (x % 2 == 0) ^ (y % 2 == test_tick);
 
-		SDL_Delay(500);
+				m_display.draw(test_vec);
+				test_tick = !test_tick;
+				SDL_Log("tick");
+			}
+		}
 	}
 }
 
@@ -99,4 +139,15 @@ void interpreter::process_events()
 				break;
 		}
 	}
+}
+
+void interpreter::process_timers(const std::chrono::nanoseconds& delta)
+{
+	for (auto& timer : this->m_timers)
+		timer.update(delta);
+}
+
+void interpreter::process_machine_tick()
+{
+
 }
