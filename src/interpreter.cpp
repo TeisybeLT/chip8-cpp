@@ -52,26 +52,12 @@ namespace
 		tick_time = std::chrono::high_resolution_clock::now();
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(tick_time - last_tick_time);
 	}
-
-	inline auto init_registers()
-	{
-		chip8::registers registers;
-		std::memset(&registers, 0, sizeof(registers));
-		registers.pc = chip8::interpreter::c_code_start;
-		return registers;
-	}
 }
 
-interpreter::interpreter(
-	const std::filesystem::path& rom_path,
-	sdl::window& interpreter_window,
-	sdl::beeper& beeper,
+interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& interpreter_window, sdl::beeper& beeper,
 	std::chrono::nanoseconds tick_period) :
-	m_is_running{true},
-	m_interpreter_window{interpreter_window},
-	m_display{chip8::display{m_interpreter_window, 64, 32}},
-	m_machine_tick_period{tick_period},
-	m_registers{init_registers()}
+	m_is_running{true}, m_interpreter_window{interpreter_window}, m_display{m_interpreter_window, 64, 32},
+	m_machine_tick_period{tick_period}, m_registers{c_code_start}
 {
 	// Set up timers
 	// Timer index 0 - delay
