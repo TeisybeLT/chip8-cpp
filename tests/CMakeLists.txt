@@ -12,6 +12,7 @@ include_directories(${CMAKE_SOURCE_DIR}/src)
 set(chip8_test_src
 	${CMAKE_SOURCE_DIR}/src/timer.cpp
 	timer_tests.cpp
+	instruction_tests.cpp
 	main.cpp
 )
 

@@ -1,5 +1,7 @@
 #include "interpreter.hpp"
+
 #include "chip8_font.hpp"
+#include "instructions.hpp"
 
 #include <SDL_timer.h>
 #include <SDL_log.h>
@@ -9,6 +11,8 @@
 #include <cstring>
 #include <functional>
 #include <fstream>
+#include <iomanip>
+#include <sstream>
 
 using namespace chip8;
 using namespace std::literals::string_literals;
@@ -45,7 +49,7 @@ namespace
 			file_byte_count);
 	}
 
-	inline auto calculate_tick_delta(std::chrono::time_point<std::chrono::high_resolution_clock>&
+	[[nodiscard]] inline auto calculate_tick_delta(std::chrono::time_point<std::chrono::high_resolution_clock>&
 		tick_time) noexcept
 	{
 		const auto last_tick_time = tick_time;
@@ -57,7 +61,7 @@ namespace
 interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& interpreter_window, sdl::beeper& beeper,
 	std::chrono::nanoseconds tick_period) :
 	m_is_running{true}, m_interpreter_window{interpreter_window}, m_display{m_interpreter_window, 64, 32},
-	m_machine_tick_period{tick_period}, m_registers{c_code_start}
+	m_machine_tick_period{tick_period}, m_registers{c_code_start}, m_video_mem(64 * 32)
 {
 	// Set up timers
 	// Timer index 0 - delay
@@ -135,5 +139,65 @@ void interpreter::process_timers(const std::chrono::nanoseconds& delta)
 
 void interpreter::process_machine_tick()
 {
+	const auto instr = instructions::fetch(this->m_mem, this->m_registers.pc);
 
+	auto throw_illegal_instruction = [&instr]
+	{
+		auto str = std::ostringstream{"Illegal instruction: 0x"};
+		str << std::hex << std::to_integer<int>(instr[1]) << std::to_integer<int>(instr[0]);
+		throw std::runtime_error(str.str()); 
+	};
+
+	switch(instructions::extract_instruction_class(instr))
+	{
+		case std::byte{0x0}:
+		{
+			if (instr[0] == std::byte{0xE0}) // CLS
+			{
+				std::fill(this->m_video_mem.begin(), this->m_video_mem.end(), false);
+				this->m_display.draw(this->m_video_mem);
+			}
+			else if (instr[0] == std::byte{0xEE}) // RET
+			{
+				instructions::ret(this->m_registers, this->m_stack);
+				return;
+			}
+			else
+				throw_illegal_instruction();
+
+			break;
+		}
+
+		case std::byte{0x1}: // JP addr
+			instructions::jp(this->m_registers, instr);
+			return;
+
+		case std::byte{0x2}: // CALL addr
+			instructions::call(this->m_registers, this->m_stack, instr);
+			return;
+
+		case std::byte{0x3}: // SE Vx, byte
+			instructions::se_reg_byte(this->m_registers, instr);
+			break;
+
+		case std::byte{0x4}: // SNE Vx, byte
+			instructions::sne_reg_byte(this->m_registers, instr);
+			break;
+
+		case std::byte{0x5}: // SE Vx, Vy
+			instructions::se_reg_reg(this->m_registers, instr);
+			break;
+
+		case std::byte{0x6}: // LD Vx, byte
+//			this->m_registers.v[instruction::get_lower_nibble<size_t>(instruction[1])] = instruction[0];
+			break;
+
+		case std::byte{0x7}: // ADD Vx, byte
+
+			break;
+//		case std::byte{0x8}:
+	}
+
+	// If not returned before, PC was not changed by instruction, so increment it here
+	++this->m_registers.pc;
 }

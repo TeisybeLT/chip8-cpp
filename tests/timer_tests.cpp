@@ -138,5 +138,4 @@ TEST_CASE("Timer callbacks" *
 		REQUIRE(is_start_called);
 		REQUIRE_FALSE(is_stop_called);
 	}
-
 }

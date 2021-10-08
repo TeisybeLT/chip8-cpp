@@ -2,6 +2,7 @@
 #define REGISTERS_HPP
 
 #include <array>
+#include <cstdint>
 
 namespace chip8
 {
@@ -14,7 +15,7 @@ namespace chip8
 		uint16_t i;
 
 		uint16_t pc;
-		uint8_t sp;
+		int8_t sp;
 
 		uint8_t delay;
 		uint8_t sound;
@@ -22,7 +23,7 @@ namespace chip8
 }
 
 constexpr chip8::registers::registers(uint16_t initial_pc)
-	: i{0}, pc{initial_pc}, sp{0}, delay{0}, sound{0}
+	: i{0}, pc{initial_pc}, sp{-1}, delay{0}, sound{0}
 {
 	this->v.fill(std::byte{0x0});
 }

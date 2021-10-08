@@ -46,6 +46,7 @@ namespace chip8
 
 		std::array<std::byte, c_mem_size> m_mem;
 		std::array<uint16_t, c_stack_size> m_stack;
+		std::vector<bool> m_video_mem;
 	};
 }
 
