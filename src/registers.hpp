@@ -10,7 +10,7 @@ namespace chip8
 	{
 		constexpr explicit registers(uint16_t initial_pc);
 
-		std::array<std::byte, 0xF> v;
+		std::array<std::byte, 16> v;
 
 		uint16_t i;
 

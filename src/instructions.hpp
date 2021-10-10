@@ -99,20 +99,20 @@ namespace chip8
 
 	constexpr void instructions::se_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[1])] == instr[0])
+		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[0])] == instr[1])
 			++regs.pc;
 	}
 
 	constexpr void instructions::sne_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[1])] != instr[0])
+		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[0])] != instr[1])
 			++regs.pc;
 	}
 
 	constexpr void instructions::se_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[1])] ==
-			regs.v[instructions::detail::get_upper_nibble<size_t>(instr[0])])
+		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[0])] ==
+			regs.v[instructions::detail::get_upper_nibble<size_t>(instr[1])])
 				++regs.pc;
 	}
 }
