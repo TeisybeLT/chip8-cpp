@@ -150,20 +150,22 @@ void interpreter::process_machine_tick()
 
 	switch(instructions::extract_instruction_class(instr))
 	{
-		case std::byte{0x0}:
+		case std::byte{0x0}: // Instruction starting with 0 are further split by their second byte
 		{
-			if (instr[0] == std::byte{0xE0}) // CLS
+			switch (instr[1])
 			{
-				std::fill(this->m_video_mem.begin(), this->m_video_mem.end(), false);
-				this->m_display.draw(this->m_video_mem);
+				case std::byte{0xE0}: // CLS
+					std::fill(this->m_video_mem.begin(), this->m_video_mem.end(), false);
+					this->m_display.draw(this->m_video_mem);
+					break
+
+				case std::byte{0xEE}: // RET
+					instructions::ret(this->m_registers, this->m_stack);
+					return;
+
+				default:
+					throw_illegal_instruction();
 			}
-			else if (instr[0] == std::byte{0xEE}) // RET
-			{
-				instructions::ret(this->m_registers, this->m_stack);
-				return;
-			}
-			else
-				throw_illegal_instruction();
 
 			break;
 		}
@@ -189,13 +191,22 @@ void interpreter::process_machine_tick()
 			break;
 
 		case std::byte{0x6}: // LD Vx, byte
-//			this->m_registers.v[instruction::get_lower_nibble<size_t>(instruction[1])] = instruction[0];
+			instructions::ld_reg_byte(this->m_registers, instr);
 			break;
 
 		case std::byte{0x7}: // ADD Vx, byte
-
+			instructions::add_reg_byte(this->m_registers, instr);
 			break;
-//		case std::byte{0x8}:
+
+		case std::byte{0x8}: // Instructions starting with 0x8 are further split by their lowest nibble
+		{
+			switch (instructions::get_lower_nibble<uint8_t>(instr[1]))
+			{
+				case uint8_t{0x00}: // LD Vx, Vy
+				instructions::ld_reg_reg(this->m_registers, instr);
+				break;
+			}
+		}
 	}
 
 	// If not returned before, PC was not changed by instruction, so increment it here

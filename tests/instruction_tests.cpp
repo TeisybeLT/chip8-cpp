@@ -39,7 +39,7 @@ TEST_CASE_TEMPLATE("Extracting lower 12 bits", T, uint16_t, int32_t, uint32_t, i
 TEST_CASE_TEMPLATE("Extracting lower nibble", T, uint16_t, int32_t, uint32_t, int32_t, size_t)
 {
 	for (uint8_t cnt = 0; cnt < 0xFF; ++cnt)
-		CHECK_EQ(instructions::detail::get_lower_nibble<T>(std::byte{cnt}), T(cnt & 0x0F));
+		CHECK_EQ(instructions::get_lower_nibble<T>(std::byte{cnt}), T(cnt & 0x0F));
 }
 
 TEST_CASE_TEMPLATE("Extracting upper nibble", T, uint16_t, int32_t, uint32_t, int32_t, size_t)
@@ -250,4 +250,81 @@ TEST_CASE("SE reg reg instruction")
 			REQUIRE_EQ(regs.pc, 0);
 		}
 	}
+}
+
+TEST_CASE("LD reg byte instruction")
+{
+	static constexpr auto test_byte = std::byte{0x8F};
+
+	auto regs = registers(0);
+	auto instr = instructions::instruction{std::byte{0x00}, test_byte};
+
+	for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		instructions::ld_reg_byte(regs, instr);
+	}
+
+	REQUIRE(std::all_of(regs.v.begin(), regs.v.end(), [](std::byte reg)
+	{
+		return reg == test_byte;
+	}));
+}
+
+TEST_CASE("ADD reg byte instruction")
+{
+	auto regs = registers(0);
+	regs.v.fill(std::byte{0x03});
+	auto instr = instructions::instruction{};
+
+	SUBCASE("Regular addition")
+	{
+		instr[1] = std::byte{0x02};
+		for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::add_reg_byte(regs, instr);
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end(), [](std::byte reg)
+		{
+			return reg == std::byte{0x05};
+		}));
+	}
+
+	SUBCASE("Overflow addition")
+	{
+		instr[1] = std::byte{0xFF};
+		for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::add_reg_byte(regs, instr);
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end(), [](std::byte reg)
+		{
+			return reg == std::byte{0x02};
+		}));
+	}
+}
+
+TEST_CASE("LD reg reg instruction")
+{
+	static constexpr auto half_reg_count = std::tuple_size<decltype(std::declval<registers>().v)>::value / 2;
+
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0xFF});
+	auto instr = get_zero_instruction();
+
+	for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+	{
+		instr[0] = std::byte(half_reg_count + reg_idx);
+		instr[1] = std::byte(reg_idx << 4);
+		instructions::ld_reg_reg(regs, instr);
+	}
+
+	REQUIRE(std::all_of(regs.v.begin(), regs.v.end(), [](std::byte reg)
+	{
+		return reg == std::byte{0xFF};
+	}));
 }

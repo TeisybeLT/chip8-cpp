@@ -18,13 +18,13 @@ namespace chip8::instructions
 	template <size_t array_size>
 	[[nodiscard]] instruction fetch(const std::array<std::byte, array_size>& mem, uint16_t pc);
 
+	template <std::integral T>
+	[[nodiscard]] constexpr T get_lower_nibble(std::byte byte) noexcept;
+
 	namespace detail
 	{
 		template <std::integral T>
 		[[nodiscard]] constexpr T get_lower_12_bits(instruction instr) noexcept;
-
-		template <std::integral T>
-		[[nodiscard]] constexpr T get_lower_nibble(std::byte byte) noexcept;
 
 		template <std::integral T>
 		[[nodiscard]] constexpr T get_upper_nibble(std::byte byte) noexcept;
@@ -36,6 +36,9 @@ namespace chip8::instructions
 	constexpr void se_reg_byte(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void sne_reg_byte(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void se_reg_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void ld_reg_byte(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void add_reg_byte(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void ld_reg_reg(chip8::registers& regs, instruction instr) noexcept;
 }
 
 namespace chip8::instructions
@@ -44,12 +47,6 @@ namespace chip8::instructions
 	constexpr T detail::get_lower_12_bits(instructions::instruction instr) noexcept
 	{
 		return std::to_integer<T>(instr[0] & std::byte{0x0F}) << 8 | std::to_integer<T>(instr[1]);
-	}
-
-	template <std::integral T>
-	constexpr T detail::get_lower_nibble(std::byte byte) noexcept
-	{
-		return std::to_integer<T>(byte & std::byte{0x0F});
 	}
 
 	template <std::integral T>
@@ -79,6 +76,12 @@ namespace chip8
 		return instr[1] >> 4;
 	}
 
+	template <std::integral T>
+	constexpr T instructions::get_lower_nibble(std::byte byte) noexcept
+	{
+		return std::to_integer<T>(byte & std::byte{0x0F});
+	}
+
 	constexpr void instructions::ret(chip8::registers& regs, std::array<uint16_t, interpreter::c_stack_size>& stack) noexcept
 	{
 		regs.pc = stack[regs.sp];
@@ -99,21 +102,40 @@ namespace chip8
 
 	constexpr void instructions::se_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[0])] == instr[1])
+		if (regs.v[instructions::get_lower_nibble<size_t>(instr[0])] == instr[1])
 			++regs.pc;
 	}
 
 	constexpr void instructions::sne_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[0])] != instr[1])
+		if (regs.v[instructions::get_lower_nibble<size_t>(instr[0])] != instr[1])
 			++regs.pc;
 	}
 
 	constexpr void instructions::se_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		if (regs.v[instructions::detail::get_lower_nibble<size_t>(instr[0])] ==
+		if (regs.v[instructions::get_lower_nibble<size_t>(instr[0])] ==
 			regs.v[instructions::detail::get_upper_nibble<size_t>(instr[1])])
 				++regs.pc;
 	}
+
+	constexpr void instructions::ld_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		regs.v[instructions::get_lower_nibble<size_t>(instr[0])] = instr[1];
+	}
+
+	constexpr void instructions::add_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		const auto reg_idx = instructions::get_lower_nibble<size_t>(instr[0]);
+		regs.v[reg_idx] = std::byte(std::to_integer<uint8_t>(regs.v[reg_idx])
+			+ std::to_integer<uint8_t>(instr[1]));
+	}
+
+	constexpr void instructions::ld_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		regs.v[instructions::get_lower_nibble<size_t>(instr[0])] =
+			regs.v[instructions::detail::get_upper_nibble<size_t>(instr[1])];
+	}
 }
+
 #endif /* INSTRUCTIONS_HPP */
