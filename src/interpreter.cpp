@@ -157,7 +157,7 @@ void interpreter::process_machine_tick()
 				case std::byte{0xE0}: // CLS
 					std::fill(this->m_video_mem.begin(), this->m_video_mem.end(), false);
 					this->m_display.draw(this->m_video_mem);
-					break
+					break;
 
 				case std::byte{0xEE}: // RET
 					instructions::ret(this->m_registers, this->m_stack);
@@ -203,8 +203,28 @@ void interpreter::process_machine_tick()
 			switch (instructions::get_lower_nibble<uint8_t>(instr[1]))
 			{
 				case uint8_t{0x00}: // LD Vx, Vy
-				instructions::ld_reg_reg(this->m_registers, instr);
-				break;
+					instructions::ld_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x01}: // OR Vx, Vy
+					instructions::or_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x02}: // AND Vx, Vy
+					instructions::and_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x03}: // XOR Vx, Vy
+					instructions::xor_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x04}: // ADD Vx, Vy
+					instructions::add_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x05}: // SUB Vx, Vy
+					instructions::sub_reg_reg(this->m_registers, instr);
+					break;
 			}
 		}
 	}

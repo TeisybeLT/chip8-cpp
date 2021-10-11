@@ -5,6 +5,8 @@ using namespace chip8;
 
 namespace
 {
+	static constexpr auto half_reg_count = std::tuple_size<decltype(std::declval<registers>().v)>::value / 2;
+
 	inline auto get_zero_instruction() noexcept
 	{
 		return instructions::instruction{std::byte{0x00}, std::byte{0x00}};
@@ -223,8 +225,6 @@ TEST_CASE("SNE reg byte instruction")
 
 TEST_CASE("SE reg reg instruction")
 {
-	static constexpr auto half_reg_count = std::tuple_size<decltype(std::declval<registers>().v)>::value / 2;
-
 	auto regs = registers(0);
 	auto instr = instructions::instruction{std::byte{0x00}, std::byte{0xFF}};
 
@@ -310,8 +310,6 @@ TEST_CASE("ADD reg byte instruction")
 
 TEST_CASE("LD reg reg instruction")
 {
-	static constexpr auto half_reg_count = std::tuple_size<decltype(std::declval<registers>().v)>::value / 2;
-
 	auto regs = registers(0);
 	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0xFF});
 	auto instr = get_zero_instruction();
@@ -327,4 +325,75 @@ TEST_CASE("LD reg reg instruction")
 	{
 		return reg == std::byte{0xFF};
 	}));
+}
+
+TEST_CASE("OR reg reg instruction")
+{
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0x0F});
+	std::fill_n(regs.v.begin() + half_reg_count, half_reg_count, std::byte{0xF0});
+	auto instr = get_zero_instruction();
+
+	for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+		instructions::or_reg_reg(regs, instr);
+	}
+
+	REQUIRE(std::all_of(regs.v.begin(), regs.v.begin() + half_reg_count, [](std::byte reg)
+	{
+		return reg == std::byte{0xFF};
+	}));
+
+	REQUIRE(std::all_of(regs.v.begin() + half_reg_count, regs.v.end(), [](std::byte reg)
+	{
+		return reg == std::byte{0xF0};
+	}));
+}
+
+TEST_CASE("AND reg reg instruction")
+{
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0xFF});
+	std::fill_n(regs.v.begin() + half_reg_count, half_reg_count, std::byte{0xF0});
+	auto instr = get_zero_instruction();
+
+	for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+		instructions::and_reg_reg(regs, instr);
+	}
+
+	REQUIRE(std::all_of(regs.v.begin(), regs.v.end(), [](std::byte reg)
+	{
+		return reg == std::byte{0xF0};
+	}));
+}
+
+TEST_CASE("XOR reg reg instruction")
+{
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0xFF});
+	std::fill_n(regs.v.begin() + half_reg_count, half_reg_count, std::byte{0xFA});
+	auto instr = get_zero_instruction();
+
+	for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+		instructions::xor_reg_reg(regs, instr);
+	}
+
+	REQUIRE(std::all_of(regs.v.begin(), regs.v.begin() + half_reg_count, [](std::byte reg)
+	{
+		return reg == std::byte{0x05};
+	}));
+
+	REQUIRE(std::all_of(regs.v.begin() + half_reg_count, regs.v.end(), [](std::byte reg)
+	{
+		return reg == std::byte{0xFA};
+	}));
+
 }
