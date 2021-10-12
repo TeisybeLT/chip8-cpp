@@ -14,6 +14,7 @@ set(chip8_cpp_src
 	timer.cpp
 	input.cpp
 	display.cpp
+	instructions.cpp
 	interpreter.cpp
 	main.cpp
 )

@@ -225,8 +225,41 @@ void interpreter::process_machine_tick()
 				case uint8_t{0x05}: // SUB Vx, Vy
 					instructions::sub_reg_reg(this->m_registers, instr);
 					break;
+
+				case uint8_t{0x06}: // SHR Vx, Vy
+					instructions::shr_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x07}: // SUBN Vx, Vy
+					instructions::subn_reg_reg(this->m_registers, instr);
+					break;
+
+				case uint8_t{0x0E}: // SHL Vx, Vy
+					instructions::subn_reg_reg(this->m_registers, instr);
+					break;
+
+				default:
+					throw_illegal_instruction();
 			}
 		}
+
+		case std::byte{0x9}: // SNE Vx, Vy
+			instructions::sne_reg_reg(this->m_registers, instr);
+			break;
+
+		case std::byte{0xA}: // LD I, addr
+			instructions::ld_i_addr(this->m_registers, instr);
+			break;
+
+		case std::byte{0xB}: // JP V0, addr
+			instructions::jp_v0_addr(this->m_registers, instr);
+			break;
+
+		case std::byte{0xC}: // RND Vx, byte
+			instructions::rnd_reg_byte(this->m_registers, instr);
+			break;
+
+
 	}
 
 	// If not returned before, PC was not changed by instruction, so increment it here

@@ -397,3 +397,284 @@ TEST_CASE("XOR reg reg instruction")
 	}));
 
 }
+
+TEST_CASE("ADD reg reg instruction")
+{
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0x09});
+	auto instr = get_zero_instruction();
+
+	SUBCASE("Non-overflowing")
+	{
+		std::fill_n(regs.v.begin() + half_reg_count, half_reg_count - 1, std::byte{0x01});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+			instructions::add_reg_reg(regs, instr);
+
+			CHECK_EQ(regs.v[0xF], std::byte{0x00});
+			CHECK_EQ(regs.v[reg_idx], std::byte{0x0A});
+			CHECK_EQ(regs.v[half_reg_count + reg_idx], std::byte{0x01});
+		}
+		CHECK_EQ(regs.v[half_reg_count - 1], std::byte{0x09});
+	}
+
+	SUBCASE("Overflowing")
+	{
+		std::fill_n(regs.v.begin() + half_reg_count, half_reg_count - 1, std::byte{0xFF});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+			instructions::add_reg_reg(regs, instr);
+
+			CHECK_EQ(regs.v[0xF], std::byte{0x01});
+			CHECK_EQ(regs.v[reg_idx], std::byte{0x08});
+			CHECK_EQ(regs.v[half_reg_count + reg_idx], std::byte{0xFF});
+		}
+		CHECK_EQ(regs.v[half_reg_count - 1], std::byte{0x09});
+	}
+}
+
+TEST_CASE("SUB reg reg instruction")
+{
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0x09});
+	auto instr = get_zero_instruction();
+
+	SUBCASE("Non-borrowing")
+	{
+		std::fill_n(regs.v.begin() + half_reg_count, half_reg_count - 1, std::byte{0x01});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+			instructions::sub_reg_reg(regs, instr);
+
+			CHECK_EQ(regs.v[0xF], std::byte{0x01});
+			CHECK_EQ(regs.v[reg_idx], std::byte{0x08});
+			CHECK_EQ(regs.v[half_reg_count + reg_idx], std::byte{0x01});
+		}
+		CHECK_EQ(regs.v[half_reg_count - 1], std::byte{0x09});
+	}
+
+	SUBCASE("Borrowing")
+	{
+		std::fill_n(regs.v.begin() + half_reg_count, half_reg_count - 1, std::byte{0x0A});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+			instructions::sub_reg_reg(regs, instr);
+
+			CHECK_EQ(regs.v[0xF], std::byte{0x00});
+			CHECK_EQ(regs.v[reg_idx], std::byte{0xFF});
+			CHECK_EQ(regs.v[half_reg_count + reg_idx], std::byte{0x0A});
+		}
+		CHECK_EQ(regs.v[half_reg_count - 1], std::byte{0x09});
+	}
+}
+
+TEST_CASE("SHR reg reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	SUBCASE("LSB is 0")
+	{
+		std::fill_n(regs.v.begin(), regs.v.size() - 1, std::byte{0x02});
+		for (size_t reg_idx = 0; reg_idx < regs.v.size() - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::shr_reg_reg(regs, instr);
+			CHECK_EQ(regs.v[0xF], std::byte{0x00});
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end() - 1, [](std::byte reg)
+		{
+			return reg == std::byte{0x01};
+		}));
+	}
+
+	SUBCASE("LSB is 1")
+	{
+		std::fill_n(regs.v.begin(), regs.v.size() - 1, std::byte{0x05});
+		for (size_t reg_idx = 0; reg_idx < regs.v.size() - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::shr_reg_reg(regs, instr);
+			CHECK_EQ(regs.v[0xF], std::byte{0x01});
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end() - 1, [](std::byte reg)
+		{
+			return reg == std::byte{0x02};
+		}));
+	}
+}
+
+TEST_CASE("SUBN reg reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	SUBCASE("Non-borrowing")
+	{
+		std::fill_n(regs.v.begin(), half_reg_count, std::byte{0x01});
+		std::fill_n(regs.v.begin() + half_reg_count, half_reg_count - 1, std::byte{0x09});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+			instructions::subn_reg_reg(regs, instr);
+
+			CHECK_EQ(regs.v[0xF], std::byte{0x01});
+			CHECK_EQ(regs.v[reg_idx], std::byte{0x08});
+			CHECK_EQ(regs.v[half_reg_count + reg_idx], std::byte{0x09});
+		}
+		CHECK_EQ(regs.v[half_reg_count - 1], std::byte{0x01});
+	}
+
+	SUBCASE("Borrowing")
+	{
+		std::fill_n(regs.v.begin(), half_reg_count, std::byte{0x0A});
+		std::fill_n(regs.v.begin() + half_reg_count, half_reg_count - 1, std::byte{0x09});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((half_reg_count + reg_idx) << 4);
+			instructions::subn_reg_reg(regs, instr);
+
+			CHECK_EQ(regs.v[0xF], std::byte{0x00});
+			CHECK_EQ(regs.v[reg_idx], std::byte{0xFF});
+			CHECK_EQ(regs.v[half_reg_count + reg_idx], std::byte{0x09});
+		}
+		CHECK_EQ(regs.v[half_reg_count - 1], std::byte{0x0A});
+	}
+}
+
+TEST_CASE("SHL reg reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	SUBCASE("MSB is 0")
+	{
+		std::fill_n(regs.v.begin(), regs.v.size() - 1, std::byte{0x01});
+		for (size_t reg_idx = 0; reg_idx < regs.v.size() - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::shl_reg_reg(regs, instr);
+			CHECK_EQ(regs.v[0xF], std::byte{0x00});
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end() - 1, [](std::byte reg)
+		{
+			return reg == std::byte{0x02};
+		}));
+	}
+
+	SUBCASE("MSB is 1")
+	{
+		std::fill_n(regs.v.begin(), regs.v.size() - 1, std::byte{0x82});
+		for (size_t reg_idx = 0; reg_idx < regs.v.size() - 1; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::shl_reg_reg(regs, instr);
+			CHECK_EQ(regs.v[0xF], std::byte{0x01});
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end() - 1, [](std::byte reg)
+		{
+			return reg == std::byte{0x04};
+		}));
+	}
+}
+
+TEST_CASE("SNE reg reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = instructions::instruction{std::byte{0x00}, std::byte{0xFF}};
+
+	SUBCASE("All regs are same")
+	{
+		for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((reg_idx + half_reg_count) << 4);
+			instructions::sne_reg_reg(regs, instr);
+			CHECK_EQ(regs.pc, 0);
+		}
+	}
+
+	SUBCASE("Half regs different")
+	{
+		std::fill_n(regs.v.begin(), half_reg_count, std::byte{0xFF});
+		for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instr[1] = std::byte((reg_idx + half_reg_count) << 4);
+			instructions::sne_reg_reg(regs, instr);
+			CHECK_EQ(regs.pc, reg_idx + 1);
+		}
+	}
+}
+
+TEST_CASE("LD I addr instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	SUBCASE("Load 0x001")
+	{
+		instr[1] = std::byte{0x01};
+		instructions::ld_i_addr(regs, instr);
+		REQUIRE_EQ(regs.i, uint16_t{0x01});
+	}
+
+	SUBCASE("Load 0xFFF")
+	{
+		instr.fill(std::byte{0xFF});
+		instructions::ld_i_addr(regs, instr);
+		REQUIRE_EQ(regs.i, uint16_t{0xFFF});
+	}
+
+	SUBCASE("Load 0x8F0")
+	{
+		instr[0] = std::byte{0x08};
+		instr[1] = std::byte{0xF0};
+		instructions::ld_i_addr(regs, instr);
+		REQUIRE_EQ(regs.i, uint16_t{0x8F0});
+	}
+}
+
+TEST_CASE("JP V0 addr instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	SUBCASE("Jump to 0x001 + 0x01")
+	{
+		regs.v[0] = std::byte{0x01};
+		instr[1] = std::byte{0x01};
+		instructions::jp_v0_addr(regs, instr);
+		REQUIRE_EQ(regs.pc, uint16_t{0x02});
+	}
+
+	SUBCASE("Jump to 0xF00 + 0xFF")
+	{
+		regs.v[0] = std::byte{0xFF};
+		instr[0] = std::byte{0x0F};
+		instructions::jp_v0_addr(regs, instr);
+		REQUIRE_EQ(regs.pc, uint16_t{0xFFF});
+	}
+
+	SUBCASE("Jump to 0x8F0")
+	{
+		instr[0] = std::byte{0x08};
+		regs.v[0] = std::byte{0xF0};
+		instructions::jp_v0_addr(regs, instr);
+		REQUIRE_EQ(regs.pc, uint16_t{0x8F0});
+	}
+}

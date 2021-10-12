@@ -44,6 +44,13 @@ namespace chip8::instructions
 	constexpr void xor_reg_reg(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void add_reg_reg(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void sub_reg_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void shr_reg_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void subn_reg_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void shl_reg_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void sne_reg_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void ld_i_addr(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void jp_v0_addr(chip8::registers& regs, instruction instr) noexcept;
+	void rnd_reg_byte(chip8::registers& regs, instruction instr) noexcept;
 }
 
 namespace chip8::instructions
@@ -162,29 +169,76 @@ namespace chip8
 
 	constexpr void instructions::add_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		const auto reg_offset = instructions::get_lower_nibble<size_t>(instr[0]);
-		auto tmp = std::to_integer<uint16_t>(regs.v[reg_offset]) +
-			std::to_integer<uint16_t>(regs.v[instructions::detail::get_upper_nibble<size_t>(instr[1])]);
+		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
+		const auto y_offset = instructions::detail::get_upper_nibble<size_t>(instr[1]);
+	
+		auto tmp = std::to_integer<uint8_t>(regs.v[x_offset]) + std::to_integer<uint8_t>(regs.v[y_offset]);
 
 		if (tmp > 255)
 		{
-			regs.v[reg_offset] = std::byte(tmp & 0xFF);
+			regs.v[x_offset] = std::byte(tmp & 0xFF);
 			regs.v[0xF] = std::byte{0x01};
 		}
 		else
 		{
-			regs.v[reg_offset] = std::byte(tmp);
+			regs.v[x_offset] = std::byte(tmp);
 			regs.v[0xF] = std::byte{0x00};
 		}
 	}
 
 	constexpr void instructions::sub_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
 	{
-		const auto vx_offset = instructions::get_lower_nibble<size_t>(instr[0]);
-		const auto vy_offset = instructions::detail::get_upper_nibble<size_t>(instr[1]);
-		regs.v[0xF] = (regs.v[vx_offset] > regs.v[vy_offset]) ? std::byte{0x01} : std::byte{0x00};
-		regs.v[vx_offset] = std::byte(std::to_integer<uint8_t>(regs.v[vx_offset]) -
-			std::to_integer<uint8_t>(regs.v[vy_offset]));
+		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
+		const auto y_offset = instructions::detail::get_upper_nibble<size_t>(instr[1]);
+
+		regs.v[0xF] = (regs.v[x_offset] > regs.v[y_offset]) ? std::byte{0x01} : std::byte{0x00};
+		auto res = std::to_integer<uint8_t>(regs.v[x_offset]) - std::to_integer<uint8_t>(regs.v[y_offset]);
+
+		regs.v[x_offset] = (res >= 0) ? std::byte(res) : std::byte(res & 0xFF);
+	}
+
+	constexpr void instructions::shr_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
+		regs.v[0xF] = regs.v[x_offset] & std::byte{0x01};
+		regs.v[x_offset] >>= 1;
+	}
+
+	constexpr void instructions::subn_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
+		const auto y_offset = instructions::detail::get_upper_nibble<size_t>(instr[1]);
+
+		regs.v[0xF] = (regs.v[y_offset] > regs.v[x_offset]) ? std::byte{0x01} : std::byte{0x00};
+		auto res = std::to_integer<uint8_t>(regs.v[y_offset]) - std::to_integer<uint8_t>(regs.v[x_offset]);
+
+		regs.v[x_offset] = (res >= 0) ? std::byte(res) : std::byte(res & 0xFF);
+	}
+
+	constexpr void instructions::shl_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
+		regs.v[0xF] = (regs.v[x_offset] & std::byte{0x80}) != std::byte{0x00} ?
+			std::byte{0x01} : std::byte{0x00};
+		regs.v[x_offset] <<= 1;
+	}
+
+	constexpr void instructions::sne_reg_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		if (regs.v[instructions::get_lower_nibble<size_t>(instr[0])] !=
+			regs.v[instructions::detail::get_upper_nibble<size_t>(instr[1])])
+				++regs.pc;
+	}
+
+	constexpr void instructions::ld_i_addr(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		regs.i = instructions::detail::get_lower_12_bits<decltype(regs.i)>(instr);
+	}
+
+	constexpr void instructions::jp_v0_addr(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		regs.pc = uint16_t(instructions::detail::get_lower_12_bits<decltype(regs.pc)>(instr) + 
+			std::to_integer<uint16_t>(regs.v[0x00])) & uint16_t{0xFFF};
 	}
 }
 
