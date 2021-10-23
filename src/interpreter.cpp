@@ -339,12 +339,12 @@ void interpreter::process_machine_tick()
 					instructions::ld_b_reg(this->m_registers, this->m_mem, instr);
 					break;
 
-				case std::byte{0x55}: // Fx55 - LD [I], Vx
+				case std::byte{0x55}: // Fx55 - ld [i], vx
 					instructions::str_i_reg(this->m_registers, this->m_mem, instr);
 					break;
 
-				case std::byte{0x65}: // Fx65 - LD Vx, [I]
-					instructions::str_i_reg(this->m_registers, this->m_mem, instr);
+				case std::byte{0x65}: // Fx65 - ld vx, [i]
+					instructions::str_reg_i(this->m_registers, this->m_mem, instr);
 					break;
 
 				default:

@@ -303,7 +303,7 @@ namespace chip8
 	constexpr void instructions::str_i_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
 	{
 
-		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
+		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]) + 1;
 		if (array_size < size_t{regs.i} + last_reg)
 			throw std::runtime_error("Out of bounds memory access");
 
@@ -313,7 +313,7 @@ namespace chip8
 	template <size_t array_size>
 	constexpr void instructions::str_reg_i(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
 	{
-		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
+		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]) + 1;
 		if (array_size < size_t{regs.i} + last_reg)
 			throw std::runtime_error("Out of bounds memory access");
 
