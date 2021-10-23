@@ -11,9 +11,9 @@ namespace chip8::font
 		return std::array<std::byte, sizeof...(Ts)>{std::byte(bytes)...};
 	}
 
-	static constexpr auto c_bytes_per_symbol = size_t {5};
-	static constexpr auto c_symbol_count = size_t {16};
-	static constexpr auto c_font_offset = size_t {0};
+	static constexpr auto c_bytes_per_symbol = std::size_t {5};
+	static constexpr auto c_symbol_count = std::size_t {16};
+	static constexpr auto c_font_offset = std::size_t {0};
 
 	constexpr auto raw_data = build_byte_array(
 		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0

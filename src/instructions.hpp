@@ -1,6 +1,7 @@
 #ifndef INSTRUCTIONS_HPP
 #define INSTRUCTIONS_HPP
 
+#include "chip8_font.hpp"
 #include "registers.hpp"
 #include "interpreter.hpp"
 
@@ -58,6 +59,16 @@ namespace chip8::instructions
 	constexpr void ld_dt_reg(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void ld_st_reg(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void add_i_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void ld_f_reg(chip8::registers& regs, instruction instr) noexcept;
+
+	template <size_t array_size>
+	constexpr void ld_b_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instruction instr);
+
+	template <size_t array_size>
+	constexpr void str_i_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instruction instr);
+	template <size_t array_size>
+	constexpr void str_reg_i(chip8::registers& regs, std::array<std::byte, array_size>& mem, instruction instr);
+
 }
 
 namespace chip8::instructions
@@ -268,6 +279,46 @@ namespace chip8
 		regs.i += std::to_integer<uint8_t>(regs.v[instructions::get_lower_nibble<size_t>(instr[0])]);
 	}
 
+	constexpr void instructions::ld_f_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		const auto digit = std::to_integer<uint8_t>(regs.v[instructions::get_lower_nibble<size_t>(instr[0])]);
+		regs.i = uint16_t(chip8::font::c_font_offset + digit * chip8::font::c_bytes_per_symbol);
+	}
+
+	template <size_t array_size>
+	constexpr void instructions::ld_b_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
+	{
+		if (array_size < size_t{regs.i} + 3)
+			throw std::runtime_error("Out of bounds memory access");
+
+		auto number = std::to_integer<int>(regs.v[instructions::get_lower_nibble<size_t>(instr[0])]);
+		for (int idx = 2; idx >= 0; --idx)
+		{
+			mem[regs.i + idx] = std::byte(number % 10);
+			number /= 10;
+		}
+	}
+
+	template <size_t array_size>
+	constexpr void instructions::str_i_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
+	{
+
+		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
+		if (array_size < size_t{regs.i} + last_reg)
+			throw std::runtime_error("Out of bounds memory access");
+
+		std::copy(regs.v.begin(), regs.v.begin() + last_reg, mem.begin() + size_t{regs.i});
+	}
+
+	template <size_t array_size>
+	constexpr void instructions::str_reg_i(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
+	{
+		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
+		if (array_size < size_t{regs.i} + last_reg)
+			throw std::runtime_error("Out of bounds memory access");
+
+		std::copy(mem.begin() + size_t{regs.i}, mem.begin() + size_t{regs.i} + last_reg, regs.v.begin());
+	}
 }
 
 #endif /* INSTRUCTIONS_HPP */

@@ -331,6 +331,22 @@ void interpreter::process_machine_tick()
 					instructions::add_i_reg(this->m_registers, instr);
 					break;
 
+				case std::byte{0x29}: // Fx29 - LD F, Vx
+					instructions::ld_f_reg(this->m_registers, instr);
+					break;
+
+				case std::byte{0x33}: // Fx33 - LD B, Vx
+					instructions::ld_b_reg(this->m_registers, this->m_mem, instr);
+					break;
+
+				case std::byte{0x55}: // Fx55 - LD [I], Vx
+					instructions::str_i_reg(this->m_registers, this->m_mem, instr);
+					break;
+
+				case std::byte{0x65}: // Fx65 - LD Vx, [I]
+					instructions::str_i_reg(this->m_registers, this->m_mem, instr);
+					break;
+
 				default:
 					throw_illegal_instruction();
 			}

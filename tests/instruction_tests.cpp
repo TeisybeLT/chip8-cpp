@@ -811,3 +811,110 @@ TEST_CASE("ADD i reg instruction")
 		REQUIRE_EQ(regs.i, uint16_t{1});
 	}
 }
+
+TEST_CASE("ADD F reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = instructions::instruction{};
+	std::generate(regs.v.begin(), regs.v.end(), [cnt = size_t{0}]() mutable
+	{
+		return std::byte(cnt++);
+	});
+
+	for (uint8_t digit = 0; digit < 0x0F; ++digit)
+	{
+		instr[0] = std::byte{digit};
+		instructions::ld_f_reg(regs, instr);
+		CHECK_EQ(regs.i, digit * 5);
+	}
+}
+
+TEST_CASE("LD B reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = instructions::instruction{};
+	auto mem = std::array<std::byte, 6>{};
+	mem.fill(std::byte{0xFF});
+
+	SUBCASE("Single digit")
+	{
+		static constexpr auto default_i_reg = uint16_t{2};
+		regs.i = default_i_reg;
+
+		std::generate(regs.v.begin(), regs.v.end(), [cnt = size_t{0}]() mutable
+		{
+			return std::byte(cnt++);
+		});
+
+		for (size_t reg_idx = 0; reg_idx < 10; ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::ld_b_reg(regs, mem, instr);
+
+			CHECK(std::all_of(mem.begin() + default_i_reg, mem.begin() + default_i_reg + 1,
+				[](auto data) -> bool
+				{
+					return data == std::byte{0x00};
+				}));
+
+			CHECK_EQ(mem[default_i_reg + 2], std::byte(reg_idx));
+		}
+	}
+
+	SUBCASE("Three digit")
+	{
+		static constexpr auto default_i_reg = uint16_t{3};
+		regs.i = default_i_reg;
+		regs.v.fill(std::byte(123));
+
+		for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::ld_b_reg(regs, mem, instr);
+
+			CHECK_EQ(mem[default_i_reg], std::byte{1});
+			CHECK_EQ(mem[default_i_reg + 1], std::byte{2});
+			CHECK_EQ(mem[default_i_reg + 2], std::byte{3});
+		}
+	}
+}
+
+TEST_CASE("LD [I] reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = instructions::instruction{std::byte{0x09}, std::byte{0x00}};
+	auto mem = std::array<std::byte, 10>{};
+	mem.fill(std::byte{0xFF});
+
+	static constexpr auto test_regs = size_t{9};
+	regs.i = 1;
+	std::generate(regs.v.begin(), regs.v.begin() + test_regs, [cnt = size_t{0}]() mutable
+	{
+		return std::byte(cnt++);
+	});
+
+	instructions::str_i_reg(regs, mem, instr);
+	REQUIRE_EQ(mem[0], std::byte{0xFF});
+	for (size_t idx = 0; idx < test_regs; ++idx)
+		CHECK_EQ(mem[idx + 1], std::byte(idx));
+}
+
+TEST_CASE("LD [I] reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = instructions::instruction{std::byte{0x09}, std::byte{0x00}};
+	auto mem = std::array<std::byte, 10>{};
+	mem.fill(std::byte{0xFF});
+
+	static constexpr auto test_regs = size_t{9};
+	regs.i = 1;
+	std::generate(mem.begin() + 1, regs.v.begin() + 1 + test_regs, [cnt = size_t{0}]() mutable
+	{
+		return std::byte(cnt++);
+	});
+
+	instructions::str_reg_i(regs, mem, instr);
+	REQUIRE_EQ(mem[0], std::byte{0xFF});
+	for (size_t idx = 0; idx < test_regs; ++idx)
+		CHECK_EQ(regs.v[idx], std::byte(idx));
+}
