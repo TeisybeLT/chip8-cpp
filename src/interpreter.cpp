@@ -147,7 +147,7 @@ void interpreter::process_machine_tick()
 
 				case std::byte{0xEE}: // RET
 					instructions::ret(this->m_registers, this->m_stack);
-					return;
+					break;
 
 				default:
 					throw_illegal_instruction();
@@ -221,7 +221,7 @@ void interpreter::process_machine_tick()
 					break;
 
 				case uint8_t{0x0E}: // SHL Vx, Vy
-					instructions::subn_reg_reg(this->m_registers, instr);
+					instructions::shl_reg_reg(this->m_registers, instr);
 					break;
 
 				default:
