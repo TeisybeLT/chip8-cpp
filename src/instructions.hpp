@@ -54,8 +54,10 @@ namespace chip8::instructions
 	void skp_reg(chip8::registers& regs, instruction instr) noexcept;
 	void sknp_reg(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void ld_reg_dt(chip8::registers& regs, instruction instr) noexcept;
+	[[nodiscard]] bool ld_reg_k(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void ld_dt_reg(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void ld_st_reg(chip8::registers& regs, instruction instr) noexcept;
+	constexpr void add_i_reg(chip8::registers& regs, instruction instr) noexcept;
 }
 
 namespace chip8::instructions
@@ -260,6 +262,12 @@ namespace chip8
 	{
 		regs.sound = std::to_integer<uint8_t>(regs.v[instructions::get_lower_nibble<size_t>(instr[0])]);
 	}
+
+	constexpr void instructions::add_i_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+	{
+		regs.i += std::to_integer<uint8_t>(regs.v[instructions::get_lower_nibble<size_t>(instr[0])]);
+	}
+
 }
 
 #endif /* INSTRUCTIONS_HPP */

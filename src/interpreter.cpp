@@ -281,7 +281,6 @@ void interpreter::process_machine_tick()
 			}
 
 			this->m_display.draw(this->m_video_mem);
-
 			break;
 		}
 
@@ -313,7 +312,9 @@ void interpreter::process_machine_tick()
 					break;
 
 				case std::byte{0x0A}: // LD Vx, K
-					//  All execution stops until a key is pressed, then the value of that key is stored in Vx.
+					if (!instructions::ld_reg_k(this->m_registers, instr))
+						return;
+
 					break;
 
 				case std::byte{0x15}: // Fx15 - LD DT, Vx
@@ -324,6 +325,10 @@ void interpreter::process_machine_tick()
 				case std::byte{0x18}: // Fx18 - LD ST, Vx
 					instructions::ld_st_reg(this->m_registers, instr);
 					this->m_timers[1].report_change();
+					break;
+
+				case std::byte{0x1E}: // Fx1E - ADD I, Vx
+					instructions::add_i_reg(this->m_registers, instr);
 					break;
 
 				default:

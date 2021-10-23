@@ -32,3 +32,23 @@ void instructions::sknp_reg(chip8::registers& regs, instructions::instruction in
 	if (!kbd_state[x_offset])
 		regs.pc += 2;
 }
+
+bool instructions::ld_reg_k(chip8::registers& regs, instructions::instruction instr) noexcept
+{
+	const auto kbd_state = chip8::get_keyboard_state();
+	if (!kbd_state.count())
+		return false;
+
+	auto pressed_idx = std::byte{0};
+	for (size_t idx = 0; idx < kbd_state.size(); ++idx)
+	{
+		if (kbd_state[idx])
+		{
+			pressed_idx = std::byte(idx);
+			break;
+		}
+	}
+
+	regs.v[instructions::get_lower_nibble<size_t>(instr[0])] = pressed_idx;
+	return true;
+}

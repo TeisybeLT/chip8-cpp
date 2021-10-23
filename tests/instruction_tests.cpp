@@ -1,6 +1,8 @@
 #include "doctest.h"
 #include "instructions.hpp"
 
+#include <limits>
+
 using namespace chip8;
 
 namespace
@@ -191,7 +193,7 @@ TEST_CASE("SE reg byte instruction")
 		{
 			instr[0] = std::byte(reg_idx);
 			instructions::se_reg_byte(regs, instr);
-			REQUIRE_EQ(regs.pc, reg_idx + 1);
+			REQUIRE_EQ(regs.pc, reg_idx * 2 + 2);
 		}
 	}
 }
@@ -207,7 +209,7 @@ TEST_CASE("SNE reg byte instruction")
 		{
 			instr[0] = std::byte(reg_idx);
 			instructions::sne_reg_byte(regs, instr);
-			REQUIRE_EQ(regs.pc, reg_idx + 1);
+			REQUIRE_EQ(regs.pc, reg_idx * 2 + 2);
 		}
 	}
 
@@ -235,7 +237,7 @@ TEST_CASE("SE reg reg instruction")
 			instr[0] = std::byte(reg_idx);
 			instr[1] = std::byte((reg_idx + half_reg_count) << 4);
 			instructions::se_reg_reg(regs, instr);
-			REQUIRE_EQ(regs.pc, reg_idx + 1);
+			REQUIRE_EQ(regs.pc, reg_idx * 2 + 2);
 		}
 	}
 
@@ -616,7 +618,7 @@ TEST_CASE("SNE reg reg instruction")
 			instr[0] = std::byte(reg_idx);
 			instr[1] = std::byte((reg_idx + half_reg_count) << 4);
 			instructions::sne_reg_reg(regs, instr);
-			CHECK_EQ(regs.pc, reg_idx + 1);
+			CHECK_EQ(regs.pc, reg_idx * 2 + 2);
 		}
 	}
 }
@@ -760,5 +762,52 @@ TEST_CASE("LD st reg instruction")
 		instr[0] = std::byte(reg_idx);
 		instructions::ld_st_reg(regs, instr);
 		CHECK_EQ(regs.sound, reg_idx);
+	}
+}
+
+TEST_CASE("LD reg reg instruction")
+{
+	auto regs = registers(0);
+	std::fill_n(regs.v.begin(), half_reg_count, std::byte{0xFF});
+	auto instr = get_zero_instruction();
+
+	for (size_t reg_idx = 0; reg_idx < half_reg_count; ++reg_idx)
+	{
+		instr[0] = std::byte(half_reg_count + reg_idx);
+		instr[1] = std::byte(reg_idx << 4);
+		instructions::ld_reg_reg(regs, instr);
+	}
+
+	REQUIRE(std::all_of(regs.v.begin(), regs.v.end(), [](std::byte reg)
+	{
+		return reg == std::byte{0xFF};
+	}));
+}
+
+TEST_CASE("ADD i reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = instructions::instruction{};
+
+	SUBCASE("Regular addition")
+	{
+		regs.i = 10;
+		regs.v.fill(std::byte{0x03});
+
+		for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::add_i_reg(regs, instr);
+		}
+
+		REQUIRE_EQ(regs.i, 3 * regs.v.size() + 10);
+	}
+
+	SUBCASE("Overflow addition")
+	{
+		regs.i = std::numeric_limits<decltype(regs.i)>::max() - 5;
+		regs.v[0] = std::byte{0x07};
+		instructions::add_i_reg(regs, instr);
+		REQUIRE_EQ(regs.i, uint16_t{1});
 	}
 }
