@@ -7,6 +7,7 @@
 #include <SDL_log.h>
 
 #include <algorithm>
+#include <bitset>
 #include <chrono>
 #include <cstring>
 #include <functional>
@@ -98,21 +99,6 @@ void interpreter::run()
 		{
 			machine_tick_count -= this->m_machine_tick_period;
 			this->process_machine_tick();
-
-			++test_count;
-			if (test_count >= 250)
-			{
-				test_count = 0;
-				// Generate test checker board pattern
-				auto test_vec = std::vector<bool>(64*32, true);
-				for (size_t y = 0; y < 32; ++y)
-					for (size_t x = 0; x < 64; ++x)
-						test_vec[y * 64 + x] = (x % 2 == 0) ^ (y % 2 == test_tick);
-
-				m_display.draw(test_vec);
-				test_tick = !test_tick;
-				SDL_Log("tick");
-			}
 		}
 	}
 }
@@ -143,8 +129,8 @@ void interpreter::process_machine_tick()
 
 	auto throw_illegal_instruction = [&instr]
 	{
-		auto str = std::ostringstream{"Illegal instruction: 0x"};
-		str << std::hex << std::to_integer<int>(instr[1]) << std::to_integer<int>(instr[0]);
+		auto str = std::ostringstream{"Illegal instruction: 0x", std::ios_base::ate};
+		str << std::hex << std::to_integer<int>(instr[0]) << std::to_integer<int>(instr[1]);
 		throw std::runtime_error(str.str()); 
 	};
 
@@ -241,6 +227,8 @@ void interpreter::process_machine_tick()
 				default:
 					throw_illegal_instruction();
 			}
+
+			break;
 		}
 
 		case std::byte{0x9}: // SNE Vx, Vy
@@ -259,9 +247,96 @@ void interpreter::process_machine_tick()
 			instructions::rnd_reg_byte(this->m_registers, instr);
 			break;
 
+		case std::byte{0xD}: // DRW Vx, Vy, nibble
+		{
+			auto wrap = [](size_t val, size_t limit)
+			{
+				return (val >= limit) ? (val - limit) : val;
+			};
 
+			this->m_registers.v[0xF] = std::byte{0x00};
+			const auto x_offset = std::to_integer<uint8_t>(this->m_registers.v[instructions::get_lower_nibble<size_t>(instr[0])]);
+			auto y_offset = std::to_integer<uint8_t>(this->m_registers.v[instructions::get_upper_nibble<size_t>(instr[1])]);
+			const auto n_end = this->m_registers.i + instructions::get_lower_nibble<uint16_t>(instr[1]);
+
+			for (size_t n_idx = this->m_registers.i; n_idx < n_end; ++n_idx)
+			{
+				auto sprite_line = std::bitset<8>(std::to_integer<uint8_t>(this->m_mem[n_idx]));
+				auto x_offset_line = x_offset;
+
+				for (int bit_idx = sprite_line.size() - 1; bit_idx >= 0; --bit_idx)
+				{
+					const auto cur_idx = y_offset * 64 + x_offset_line;
+					const auto prev_bit = bool{this->m_video_mem[cur_idx]};
+					const auto new_bit = bool{sprite_line[bit_idx]};
+
+					this->m_video_mem[cur_idx] = prev_bit ^ new_bit;
+					if (prev_bit && new_bit)
+						this->m_registers.v[0xF] = std::byte{0x01};
+
+					x_offset_line = wrap(x_offset_line + 1, 64);
+				}
+
+				y_offset = wrap(y_offset + 1, 32);
+			}
+
+			this->m_display.draw(this->m_video_mem);
+
+			break;
+		}
+
+		case std::byte{0xE}: // Instructions starting with 0xE are further split by their lowest byte
+		{
+			switch (instr[1])
+			{
+				case std::byte{0x9E}: // Ex9E - SKP Vx
+					instructions::skp_reg(this->m_registers, instr);
+					break;
+
+				case std::byte{0xA1}: // ExA1 - SKNP Vx
+					instructions::sknp_reg(this->m_registers, instr);
+					break;
+
+				default:
+					throw_illegal_instruction();
+			}
+
+			break;
+		}
+
+		case std::byte{0xF}: // Instructions starting with 0xF are further split by their lowest byte
+		{
+			switch (instr[1])
+			{
+				case std::byte{0x07}: // Fx07 - LD Vx, DT
+					instructions::ld_reg_dt(this->m_registers, instr);
+					break;
+
+				case std::byte{0x0A}: // LD Vx, K
+					//  All execution stops until a key is pressed, then the value of that key is stored in Vx.
+					break;
+
+				case std::byte{0x15}: // Fx15 - LD DT, Vx
+					instructions::ld_dt_reg(this->m_registers, instr);
+					this->m_timers[0].report_change();
+					break;
+
+				case std::byte{0x18}: // Fx18 - LD ST, Vx
+					instructions::ld_st_reg(this->m_registers, instr);
+					this->m_timers[1].report_change();
+					break;
+
+				default:
+					throw_illegal_instruction();
+			}
+
+			break;
+		}
+
+		default:
+			throw_illegal_instruction();
 	}
 
 	// If not returned before, PC was not changed by instruction, so increment it here
-	++this->m_registers.pc;
+	this->m_registers.pc += 2;
 }

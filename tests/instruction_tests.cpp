@@ -47,7 +47,7 @@ TEST_CASE_TEMPLATE("Extracting lower nibble", T, uint16_t, int32_t, uint32_t, in
 TEST_CASE_TEMPLATE("Extracting upper nibble", T, uint16_t, int32_t, uint32_t, int32_t, size_t)
 {
 	for (uint8_t cnt = 0; cnt < 0xFF; ++cnt)
-		CHECK_EQ(instructions::detail::get_upper_nibble<T>(std::byte{cnt}), T((cnt & 0xF0) >> 4));
+		CHECK_EQ(instructions::get_upper_nibble<T>(std::byte{cnt}), T((cnt & 0xF0) >> 4));
 }
 
 TEST_CASE("Fetch instruction")
@@ -676,5 +676,89 @@ TEST_CASE("JP V0 addr instruction")
 		regs.v[0] = std::byte{0xF0};
 		instructions::jp_v0_addr(regs, instr);
 		REQUIRE_EQ(regs.pc, uint16_t{0x8F0});
+	}
+}
+
+TEST_CASE("RND Vx, byte")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	SUBCASE("Lower nibble mask")
+	{
+		instr[1] = std::byte{0x0F};
+		for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::rnd_reg_byte(regs, instr);
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end() - 1, [](std::byte reg)
+		{
+			return (reg & std::byte{0xF0}) == std::byte{0x00};
+		}));
+	}
+
+	SUBCASE("Lower upper mask")
+	{
+		instr[1] = std::byte{0xF0};
+		for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+		{
+			instr[0] = std::byte(reg_idx);
+			instructions::rnd_reg_byte(regs, instr);
+		}
+
+		REQUIRE(std::all_of(regs.v.begin(), regs.v.end() - 1, [](std::byte reg)
+		{
+			return (reg & std::byte{0x0F}) == std::byte{0x00};
+		}));
+	}
+}
+
+TEST_CASE("LD reg dt instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+
+	for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		regs.delay = uint8_t(reg_idx);
+		instructions::ld_reg_dt(regs, instr);
+		CHECK_EQ(std::to_integer<size_t>(regs.v[reg_idx]), reg_idx);
+	}
+}
+
+TEST_CASE("LD dt reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+	std::generate(regs.v.begin(), regs.v.end(), [cnt = size_t{0}]() mutable
+	{
+		return std::byte(cnt++);
+	});
+
+	for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		instructions::ld_dt_reg(regs, instr);
+		CHECK_EQ(regs.delay, reg_idx);
+	}
+}
+
+TEST_CASE("LD st reg instruction")
+{
+	auto regs = registers(0);
+	auto instr = get_zero_instruction();
+	std::generate(regs.v.begin(), regs.v.end(), [cnt = size_t{0}]() mutable
+	{
+		return std::byte(cnt++);
+	});
+
+	for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
+	{
+		instr[0] = std::byte(reg_idx);
+		instructions::ld_st_reg(regs, instr);
+		CHECK_EQ(regs.sound, reg_idx);
 	}
 }
