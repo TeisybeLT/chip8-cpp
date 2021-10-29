@@ -1,9 +1,21 @@
 #include "instructions.hpp"
 #include "input.hpp"
 
+#include <SDL_log.h>
+
 #include <random>
 
 using namespace chip8;
+
+namespace
+{
+	inline bool is_key_pressed(const registers& regs, instructions::instruction instr) noexcept
+	{
+		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
+		const auto key = std::to_integer<size_t>(regs.v[x_offset]);
+		return chip8::get_keyboard_state()[key];
+	}
+}
 
 void instructions::rnd_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
 {
@@ -17,19 +29,13 @@ void instructions::rnd_reg_byte(chip8::registers& regs, instructions::instructio
 
 void instructions::skp_reg(chip8::registers& regs, instructions::instruction instr) noexcept
 {
-	const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
-	const auto kbd_state = chip8::get_keyboard_state();
-
-	if (kbd_state[x_offset])
+	if (is_key_pressed(regs, instr))
 		regs.pc += 2;
 }
 
 void instructions::sknp_reg(chip8::registers& regs, instructions::instruction instr) noexcept
 {
-	const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
-	const auto kbd_state = chip8::get_keyboard_state();
-
-	if (!kbd_state[x_offset])
+	if (!is_key_pressed(regs, instr))
 		regs.pc += 2;
 }
 
