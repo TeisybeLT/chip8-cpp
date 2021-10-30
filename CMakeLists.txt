@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
 project(chip8-cpp CXX)
 
+# Project options
+option(BUILD_TESTS "Build unit tests" OFF)
+
 # Dependencies
 find_package(SDL2 REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
@@ -14,4 +17,7 @@ target_compile_features(project_options INTERFACE cxx_std_20)
 
 # Add subdirectories
 add_subdirectory(src)
-add_subdirectory(tests)
+
+if(BUILD_TESTS)
+	add_subdirectory(tests)
+endif()

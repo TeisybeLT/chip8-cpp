@@ -14,6 +14,7 @@ namespace
 		auto opts = cxxopts::Options("chip8-cpp"s, "A simple chip8 interpreter written in C++"s);
 
 		opts.add_options()
+			("h, help"s, "Show help screen"s)
 			("r, rom"s, "Path to chip8 (*.ch8) rom file"s, cxxopts::value<std::string>())
 			("f, freq"s, "Speed of emulation", cxxopts::value<int>()->default_value("500"s))
 			("d, debug"s, "Enable debug strings"s, cxxopts::value<bool>())
@@ -64,7 +65,15 @@ int main(int argc, char* argv[]) try
 	SDL_Log("SDL Version: %d.%d.%d", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
 
 	// Parse reults
-	const auto parse_result = set_up_options().parse(argc, argv);
+	auto options = set_up_options();
+	const auto parse_result = options.parse(argc, argv);
+	if (parse_result.count("help"))
+	{
+		SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, options.help().c_str());
+		return EXIT_SUCCESS;
+	}
+
+
 	parse_debug_logging(parse_result);
 	auto rom_path = parse_rom_path(parse_result);
 	if (rom_path.empty())
