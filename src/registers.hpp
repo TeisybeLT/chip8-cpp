@@ -4,13 +4,15 @@
 #include <array>
 #include <cstdint>
 
+#include "constants.hpp"
+
 namespace chip8
 {
 	struct registers
 	{
 		constexpr explicit registers(uint16_t initial_pc);
 
-		std::array<std::byte, 16> v;
+		std::array<std::byte, constants::v_reg_count> v;
 
 		uint16_t i;
 

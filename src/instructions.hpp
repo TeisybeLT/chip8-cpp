@@ -80,8 +80,7 @@ namespace chip8::instructions
 	}
 }
 
-namespace chip8
-{
+namespace chip8 {
 	template <size_t array_size>
 	instructions::instruction instructions::fetch(const std::array<std::byte, array_size>& mem, uint16_t pc)
 	{
@@ -302,22 +301,21 @@ namespace chip8
 	template <size_t array_size>
 	constexpr void instructions::str_i_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
 	{
-
-		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]) + 1;
+		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
 		if (array_size < size_t{regs.i} + last_reg)
 			throw std::runtime_error("Out of bounds memory access");
 
-		std::copy(regs.v.begin(), regs.v.begin() + last_reg, mem.begin() + size_t{regs.i});
+		std::copy(regs.v.begin(), regs.v.begin() + last_reg + 1, mem.begin() + size_t{regs.i});
 	}
 
 	template <size_t array_size>
 	constexpr void instructions::str_reg_i(chip8::registers& regs, std::array<std::byte, array_size>& mem, instructions::instruction instr)
 	{
-		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]) + 1;
+		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
 		if (array_size < size_t{regs.i} + last_reg)
 			throw std::runtime_error("Out of bounds memory access");
 
-		std::copy(mem.begin() + size_t{regs.i}, mem.begin() + size_t{regs.i} + last_reg, regs.v.begin());
+		std::copy(mem.begin() + size_t{regs.i}, mem.begin() + size_t{regs.i} + last_reg + 1, regs.v.begin());
 	}
 }
 
