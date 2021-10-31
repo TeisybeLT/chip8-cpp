@@ -80,7 +80,8 @@ namespace chip8::instructions
 	}
 }
 
-namespace chip8 {
+namespace chip8
+{
 	template <size_t array_size>
 	instructions::instruction instructions::fetch(const std::array<std::byte, array_size>& mem, uint16_t pc)
 	{
