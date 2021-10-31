@@ -21,7 +21,7 @@ using namespace std::literals::string_literals;
 namespace
 {
 	void load_program_to_mem(const std::filesystem::path& rom_path,
-		std::array<std::byte, chip8::interpreter::c_mem_size>& mem)
+		std::array<std::byte, chip8::constants::mem_size>& mem)
 	{
 		// Sanity check
 		if (!std::filesystem::exists(rom_path))
@@ -36,8 +36,8 @@ namespace
 		if (!reader)
 			throw std::runtime_error("Unable to open file "s + rom_path.string() + " for reading"s);
 
-		constexpr auto max_rom_size = chip8::interpreter::c_mem_size
-			- chip8::interpreter::c_code_start;
+		constexpr auto max_rom_size = chip8::constants::mem_size
+			- chip8::constants::code_start;
 		const auto file_byte_count = reader.tellg();
 		if (file_byte_count > max_rom_size)
 		{
@@ -46,7 +46,7 @@ namespace
 		}
 
 		reader.seekg(0);
-		reader.read(reinterpret_cast<char*>(mem.data() + chip8::interpreter::c_code_start),
+		reader.read(reinterpret_cast<char*>(mem.data() + chip8::constants::code_start),
 			file_byte_count);
 	}
 
@@ -61,14 +61,18 @@ namespace
 
 interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& interpreter_window, sdl::beeper& beeper,
 	std::chrono::nanoseconds tick_period) :
-	m_is_running{true}, m_interpreter_window{interpreter_window}, m_display{m_interpreter_window, 64, 32},
-	m_machine_tick_period{tick_period}, m_registers{c_code_start}, m_video_mem(64 * 32)
+		m_is_running{true},
+		m_interpreter_window{interpreter_window},
+		m_display{m_interpreter_window, 64, 32},
+		m_machine_tick_period{tick_period},
+		m_registers{constants::code_start},
+		m_video_mem(64 * 32)
 {
 	// Set up timers
 	// Timer index 0 - delay
 	// Timer index 1 - sound
-	this->m_timers.emplace_back(this->m_registers.delay, c_timer_tick_freq);
-	this->m_timers.emplace_back(this->m_registers.sound, c_timer_tick_freq,
+	this->m_timers.emplace_back(this->m_registers.delay, constants::timer_tick_freq);
+	this->m_timers.emplace_back(this->m_registers.sound, constants::timer_tick_freq,
 		std::bind(&sdl::beeper::play, &beeper),
 		std::bind(&sdl::beeper::pause, &beeper)
 	);
