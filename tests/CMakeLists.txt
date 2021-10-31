@@ -14,7 +14,12 @@ set(chip8_test_src
 	${CMAKE_SOURCE_DIR}/src/instructions.cpp
 	${CMAKE_SOURCE_DIR}/src/input.cpp
 	timer_tests.cpp
-	instruction_tests.cpp
+	instruction_internals.cpp
+	comparison_instructions.cpp
+	flow_instructions.cpp
+	ld_instructions.cpp
+	math_instructions.cpp
+	misc_instructions.cpp
 	main.cpp
 )
 
