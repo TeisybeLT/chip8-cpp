@@ -208,7 +208,7 @@ TEST_CASE("LD [I] reg instruction")
 		CHECK_EQ(mem[idx + 1], std::byte(idx));
 }
 
-TEST_CASE("LD [I] reg instruction")
+TEST_CASE("LD reg [I] instruction")
 {
 	auto regs = registers(0);
 	auto instr = instructions::instruction{std::byte{0x09}, std::byte{0x00}};
