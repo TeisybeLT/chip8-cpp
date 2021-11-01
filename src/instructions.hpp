@@ -2,8 +2,8 @@
 #define INSTRUCTIONS_HPP
 
 #include "chip8_font.hpp"
+#include "types.hpp"
 #include "registers.hpp"
-#include "interpreter.hpp"
 
 #include <algorithm>
 #include <array>
@@ -31,9 +31,9 @@ namespace chip8::instructions
 		[[nodiscard]] constexpr T get_lower_12_bits(instruction instr) noexcept;
 	}
 
-	constexpr void ret(chip8::registers& regs, std::array<uint16_t, interpreter::c_stack_size>& stack) noexcept;
+	constexpr void ret(chip8::registers& regs, stack_t& stack) noexcept;
 	constexpr void jp(chip8::registers& regs, instruction instr) noexcept;
-	constexpr void call(chip8::registers& regs, std::array<uint16_t, interpreter::c_stack_size>& stack, instruction instr) noexcept;
+	constexpr void call(chip8::registers& regs, stack_t& stack, instruction instr) noexcept;
 	constexpr void se_reg_byte(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void sne_reg_byte(chip8::registers& regs, instruction instr) noexcept;
 	constexpr void se_reg_reg(chip8::registers& regs, instruction instr) noexcept;
@@ -112,7 +112,7 @@ namespace chip8
 		return std::to_integer<T>(byte >> 4);
 	}
 
-	constexpr void instructions::ret(chip8::registers& regs, std::array<uint16_t, interpreter::c_stack_size>& stack) noexcept
+	constexpr void instructions::ret(chip8::registers& regs, stack_t& stack) noexcept
 	{
 		regs.pc = stack[regs.sp];
 		--regs.sp;
@@ -123,7 +123,7 @@ namespace chip8
 		regs.pc = detail::get_lower_12_bits<decltype(regs.pc)>(instr);
 	}
 
-	constexpr void instructions::call(chip8::registers& regs, std::array<uint16_t, interpreter::c_stack_size>& stack, instructions::instruction instr) noexcept
+	constexpr void instructions::call(chip8::registers& regs, stack_t& stack, instructions::instruction instr) noexcept
 	{
 		++regs.sp;
 		stack[regs.sp] = regs.pc;

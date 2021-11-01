@@ -6,9 +6,9 @@ using namespace chip8;
 
 TEST_CASE("RET instruction")
 {
-	for (size_t cnt = 0; cnt < interpreter::c_stack_size; ++cnt)
+	for (size_t cnt = 0; cnt < constants::stack_size; ++cnt)
 	{
-		auto stack = std::array<uint16_t, interpreter::c_stack_size>();
+		auto stack = stack_t();
 		auto regs = registers(0);
 
 		regs.sp = uint16_t(cnt);
@@ -51,7 +51,7 @@ TEST_CASE("JP instruction")
 
 TEST_CASE("Nested CALL instruction")
 {
-	auto stack = std::array<uint16_t, interpreter::c_stack_size>();
+	auto stack = stack_t();
 	auto regs = registers(1337);
 	auto instr = helpers::get_zero_instruction();
 

@@ -1,3 +1,4 @@
+#include "constants.hpp"
 #include "sdl_environment.hpp"
 #include "interpreter.hpp"
 
@@ -73,7 +74,6 @@ int main(int argc, char* argv[]) try
 		return EXIT_SUCCESS;
 	}
 
-
 	parse_debug_logging(parse_result);
 	auto rom_path = parse_rom_path(parse_result);
 	if (rom_path.empty())
@@ -87,8 +87,9 @@ int main(int argc, char* argv[]) try
 
 	// Build SDL related stuff
 	auto sdl_game = sdl::environment();
-	auto& interpreter_window = sdl_game.create_window(u8"Chip8-cpp interpreter"s, SDL_Rect{0, 0, 64 * upscale_mult, 32 * upscale_mult});
-	auto& beeper = sdl_game.create_beeper(440, 128);
+	auto& interpreter_window = sdl_game.create_window(u8"Chip8-cpp interpreter"s,
+		SDL_Rect{0, 0, chip8::constants::ch8_width * upscale_mult, chip8::constants::ch8_height * upscale_mult});
+	auto& beeper = sdl_game.create_beeper(chip8::constants::audio_freq, chip8::constants::audio_ampl);
 
 	// Start interpreter
 	chip8::interpreter(rom_path, interpreter_window, beeper, machine_tick_period).run();
