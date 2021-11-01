@@ -1,5 +1,5 @@
 #include "instructions.hpp"
-#include "input.hpp"
+#include "io/input.hpp"
 
 #include <SDL_log.h>
 
