@@ -63,10 +63,10 @@ interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& int
 	std::chrono::nanoseconds tick_period) :
 		m_is_running{true},
 		m_interpreter_window{interpreter_window},
-		m_display{m_interpreter_window, 64, 32},
+		m_display{m_interpreter_window, constants::ch8_width, constants::ch8_height},
 		m_machine_tick_period{tick_period},
 		m_registers{constants::code_start},
-		m_video_mem(64 * 32)
+		m_video_mem(this->m_display.get_pixel_count())
 {
 	// Set up timers
 	// Timer index 0 - delay
@@ -270,7 +270,7 @@ void interpreter::process_machine_tick()
 
 				for (int bit_idx = sprite_line.size() - 1; bit_idx >= 0; --bit_idx)
 				{
-					const auto cur_idx = y_offset * 64 + x_offset_line;
+					const auto cur_idx = y_offset * this->m_display.get_width() + x_offset_line;
 					const auto prev_bit = bool{this->m_video_mem[cur_idx]};
 					const auto new_bit = bool{sprite_line[bit_idx]};
 
@@ -278,10 +278,10 @@ void interpreter::process_machine_tick()
 					if (prev_bit && new_bit)
 						this->m_registers.v[0xF] = std::byte{0x01};
 
-					x_offset_line = wrap(x_offset_line + 1, 64);
+					x_offset_line = wrap(x_offset_line + 1, this->m_display.get_width());
 				}
 
-				y_offset = wrap(y_offset + 1, 32);
+				y_offset = wrap(y_offset + 1, this->m_display.get_height());
 			}
 
 			this->m_display.draw(this->m_video_mem);

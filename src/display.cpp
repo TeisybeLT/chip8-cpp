@@ -40,3 +40,18 @@ void display::draw(const std::vector<bool>& pixels)
 
 	this->m_window.update();
 }
+
+size_t display::get_pixel_count() const noexcept
+{
+	return this->m_pixel_count;
+}
+
+int display::get_width() const noexcept
+{
+	return this->m_surface->w;
+}
+
+int display::get_height() const noexcept
+{
+	return this->m_surface->h;
+}
