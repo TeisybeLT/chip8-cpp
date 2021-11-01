@@ -21,7 +21,7 @@ using namespace std::literals::string_literals;
 namespace
 {
 	void load_program_to_mem(const std::filesystem::path& rom_path,
-		std::array<std::byte, chip8::constants::mem_size>& mem)
+		chip8::memory_t& mem)
 	{
 		// Sanity check
 		if (!std::filesystem::exists(rom_path))

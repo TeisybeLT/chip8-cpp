@@ -1,10 +1,10 @@
 #ifndef INTERPRETER_HPP
 #define INTERPRETER_HPP
 
-#include "constants.hpp"
 #include "display.hpp"
 #include "registers.hpp"
 #include "timer.hpp"
+#include "types.hpp"
 #include "sdl_beeper.hpp"
 
 #include <SDL_events.h>
@@ -37,9 +37,8 @@ namespace chip8
 
 		std::vector<chip8::timer> m_timers;
 		registers m_registers;
-
-		std::array<std::byte, constants::mem_size> m_mem;
-		std::array<uint16_t, constants::stack_size> m_stack;
+		memory_t m_mem;
+		stack_t m_stack;
 		std::vector<bool> m_video_mem;
 	};
 }

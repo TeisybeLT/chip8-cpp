@@ -8,7 +8,7 @@ TEST_CASE("RET instruction")
 {
 	for (size_t cnt = 0; cnt < constants::stack_size; ++cnt)
 	{
-		auto stack = std::array<uint16_t, constants::stack_size>();
+		auto stack = stack_t();
 		auto regs = registers(0);
 
 		regs.sp = uint16_t(cnt);
@@ -51,7 +51,7 @@ TEST_CASE("JP instruction")
 
 TEST_CASE("Nested CALL instruction")
 {
-	auto stack = std::array<uint16_t, constants::stack_size>();
+	auto stack = stack_t();
 	auto regs = registers(1337);
 	auto instr = helpers::get_zero_instruction();
 
