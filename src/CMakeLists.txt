@@ -8,9 +8,9 @@ file(DOWNLOAD https://raw.githubusercontent.com/jarro2783/cxxopts/master/include
 )
 
 set(chip8_cpp_src
-	sdl_environment.cpp
-	sdl_window.cpp
-	sdl_beeper.cpp
+	sdl/sdl_environment.cpp
+	sdl/sdl_window.cpp
+	sdl/sdl_beeper.cpp
 	timer.cpp
 	input.cpp
 	display.cpp

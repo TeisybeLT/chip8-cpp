@@ -5,7 +5,7 @@
 #include "registers.hpp"
 #include "timer.hpp"
 #include "types.hpp"
-#include "sdl_beeper.hpp"
+#include "sdl/sdl_beeper.hpp"
 
 #include <SDL_events.h>
 
