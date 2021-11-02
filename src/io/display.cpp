@@ -2,6 +2,7 @@
 #include "errors/sdl_exception.hpp"
 
 #include <array>
+#include <cassert>
 #include <cstring>
 
 #include <SDL_log.h>
@@ -24,8 +25,7 @@ display::~display()
 
 void display::draw(const std::vector<bool>& pixels)
 {
-	if (pixels.size() != this->m_pixel_count)
-		throw std::runtime_error("Size mismatch");
+	assert(pixels.size() == this->m_pixel_count);
 
 	// Update current surface
 	for (size_t cnt = 0; cnt < pixels.size(); ++cnt)
