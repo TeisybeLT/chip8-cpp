@@ -9,7 +9,7 @@ TEST_CASE("ADD reg byte instruction")
 {
 	auto regs = registers(0);
 	regs.v.fill(std::byte{0x03});
-	auto instr = instructions::instruction{};
+	auto instr = instr_t{};
 
 	SUBCASE("Regular addition")
 	{
@@ -310,7 +310,7 @@ TEST_CASE("SHL reg reg instruction")
 TEST_CASE("ADD i reg instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{};
+	auto instr = instr_t{};
 
 	SUBCASE("Regular addition")
 	{
@@ -338,7 +338,7 @@ TEST_CASE("ADD i reg instruction")
 TEST_CASE("ADD F reg instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{};
+	auto instr = instr_t{};
 	std::generate(regs.v.begin(), regs.v.end(), [cnt = size_t{0}]() mutable
 	{
 		return std::byte(cnt++);

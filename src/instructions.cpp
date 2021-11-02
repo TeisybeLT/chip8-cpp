@@ -9,7 +9,7 @@ using namespace chip8;
 
 namespace
 {
-	inline bool is_key_pressed(const registers& regs, instructions::instruction instr) noexcept
+	inline bool is_key_pressed(const registers& regs, instr_t instr) noexcept
 	{
 		const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
 		const auto key = std::to_integer<size_t>(regs.v[x_offset]);
@@ -17,7 +17,7 @@ namespace
 	}
 }
 
-void instructions::rnd_reg_byte(chip8::registers& regs, instructions::instruction instr) noexcept
+void instructions::rnd_reg_byte(chip8::registers& regs, instr_t instr) noexcept
 {
 	const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
 
@@ -27,19 +27,19 @@ void instructions::rnd_reg_byte(chip8::registers& regs, instructions::instructio
 	regs.v[x_offset] = std::byte(random_number) & instr[1];
 }
 
-void instructions::skp_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+void instructions::skp_reg(chip8::registers& regs, instr_t instr) noexcept
 {
 	if (is_key_pressed(regs, instr))
 		regs.pc += 2;
 }
 
-void instructions::sknp_reg(chip8::registers& regs, instructions::instruction instr) noexcept
+void instructions::sknp_reg(chip8::registers& regs, instr_t instr) noexcept
 {
 	if (!is_key_pressed(regs, instr))
 		regs.pc += 2;
 }
 
-bool instructions::ld_reg_k(chip8::registers& regs, instructions::instruction instr) noexcept
+bool instructions::ld_reg_k(chip8::registers& regs, instr_t instr) noexcept
 {
 	const auto kbd_state = chip8::get_keyboard_state();
 	if (!kbd_state.count())
