@@ -7,19 +7,22 @@ file(DOWNLOAD https://raw.githubusercontent.com/onqtam/doctest/master/doctest/do
 	SHOW_PROGRESS
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
+include_directories(
+	${CMAKE_SOURCE_DIR}/src
+	${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 set(chip8_test_src
 	${CMAKE_SOURCE_DIR}/src/timer.cpp
 	${CMAKE_SOURCE_DIR}/src/instructions.cpp
 	${CMAKE_SOURCE_DIR}/src/io/input.cpp
+	instructions/instruction_internals.cpp
+	instructions/comparison_instructions.cpp
+	instructions/flow_instructions.cpp
+	instructions/ld_instructions.cpp
+	instructions/math_instructions.cpp
+	instructions/misc_instructions.cpp
 	timer_tests.cpp
-	instruction_internals.cpp
-	comparison_instructions.cpp
-	flow_instructions.cpp
-	ld_instructions.cpp
-	math_instructions.cpp
-	misc_instructions.cpp
 	main.cpp
 )
 
