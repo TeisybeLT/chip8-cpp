@@ -14,7 +14,6 @@
 #include <functional>
 
 using namespace chip8;
-using namespace std::literals::string_literals;
 
 namespace
 {
@@ -158,41 +157,41 @@ void interpreter::process_machine_tick()
 
 		case std::byte{0x8}: // Instructions starting with 0x8 are further split by their lowest nibble
 		{
-			switch (instructions::get_lower_nibble<uint8_t>(instr[1]))
+			switch (instructions::get_lower_nibble<std::byte>(instr[1]))
 			{
-				case uint8_t{0x00}: // LD Vx, Vy
+				case std::byte{0x00}: // LD Vx, Vy
 					instructions::ld_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x01}: // OR Vx, Vy
+				case std::byte{0x01}: // OR Vx, Vy
 					instructions::or_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x02}: // AND Vx, Vy
+				case std::byte{0x02}: // AND Vx, Vy
 					instructions::and_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x03}: // XOR Vx, Vy
+				case std::byte{0x03}: // XOR Vx, Vy
 					instructions::xor_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x04}: // ADD Vx, Vy
+				case std::byte{0x04}: // ADD Vx, Vy
 					instructions::add_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x05}: // SUB Vx, Vy
+				case std::byte{0x05}: // SUB Vx, Vy
 					instructions::sub_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x06}: // SHR Vx, Vy
+				case std::byte{0x06}: // SHR Vx, Vy
 					instructions::shr_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x07}: // SUBN Vx, Vy
+				case std::byte{0x07}: // SUBN Vx, Vy
 					instructions::subn_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x0E}: // SHL Vx, Vy
+				case std::byte{0x0E}: // SHL Vx, Vy
 					instructions::shl_reg_reg(this->m_registers, instr);
 					break;
 
