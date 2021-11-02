@@ -2,6 +2,7 @@
 
 #include "chip8_font.hpp"
 #include "instructions.hpp"
+#include "io/rom.hpp"
 
 #include <SDL_timer.h>
 #include <SDL_log.h>
@@ -11,45 +12,11 @@
 #include <chrono>
 #include <cstring>
 #include <functional>
-#include <fstream>
-#include <iomanip>
-#include <sstream>
 
 using namespace chip8;
-using namespace std::literals::string_literals;
 
 namespace
 {
-	void load_program_to_mem(const std::filesystem::path& rom_path,
-		chip8::memory_t& mem)
-	{
-		// Sanity check
-		if (!std::filesystem::exists(rom_path))
-			throw std::runtime_error("File does not exist at "s + rom_path.string());
-
-		if (!std::filesystem::is_regular_file(rom_path))
-			throw std::runtime_error(rom_path.string() + " does not point to a regular file"s);
-
-		// Load to mem
-		auto reader = std::ifstream(rom_path, std::ios_base::in | std::ios_base::binary |
-			std::ios_base::ate);
-		if (!reader)
-			throw std::runtime_error("Unable to open file "s + rom_path.string() + " for reading"s);
-
-		constexpr auto max_rom_size = chip8::constants::mem_size
-			- chip8::constants::code_start;
-		const auto file_byte_count = reader.tellg();
-		if (file_byte_count > max_rom_size)
-		{
-			throw std::runtime_error("Rom file is too large. Expected up to "s
-				+ std::to_string(max_rom_size) + " got "s + std::to_string(file_byte_count));
-		}
-
-		reader.seekg(0);
-		reader.read(reinterpret_cast<char*>(mem.data() + chip8::constants::code_start),
-			file_byte_count);
-	}
-
 	[[nodiscard]] inline auto calculate_tick_delta(std::chrono::time_point<std::chrono::high_resolution_clock>&
 		tick_time) noexcept
 	{
@@ -57,6 +24,11 @@ namespace
 		tick_time = std::chrono::high_resolution_clock::now();
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(tick_time - last_tick_time);
 	}
+
+	[[nodiscard]] inline auto wrap(size_t val, size_t limit)
+	{
+		return (val >= limit) ? (val - limit) : val;
+	};
 }
 
 interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& interpreter_window, sdl::beeper& beeper,
@@ -78,8 +50,8 @@ interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& int
 	);
 
 	// Set up memory
-	std::copy_n(chip8::font::raw_data.begin(), chip8::font::raw_data.size(), this->m_mem.begin());	
-	load_program_to_mem(rom_path, this->m_mem);
+	std::copy_n(chip8::font::raw_data.begin(), chip8::font::raw_data.size(), this->m_mem.begin());
+	chip8::load_rom_from_file(rom_path, this->m_mem);
 }
 
 void interpreter::run()
@@ -190,41 +162,41 @@ void interpreter::process_machine_tick()
 
 		case std::byte{0x8}: // Instructions starting with 0x8 are further split by their lowest nibble
 		{
-			switch (instructions::get_lower_nibble<uint8_t>(instr[1]))
+			switch (instructions::get_lower_nibble<std::byte>(instr[1]))
 			{
-				case uint8_t{0x00}: // LD Vx, Vy
+				case std::byte{0x00}: // LD Vx, Vy
 					instructions::ld_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x01}: // OR Vx, Vy
+				case std::byte{0x01}: // OR Vx, Vy
 					instructions::or_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x02}: // AND Vx, Vy
+				case std::byte{0x02}: // AND Vx, Vy
 					instructions::and_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x03}: // XOR Vx, Vy
+				case std::byte{0x03}: // XOR Vx, Vy
 					instructions::xor_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x04}: // ADD Vx, Vy
+				case std::byte{0x04}: // ADD Vx, Vy
 					instructions::add_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x05}: // SUB Vx, Vy
+				case std::byte{0x05}: // SUB Vx, Vy
 					instructions::sub_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x06}: // SHR Vx, Vy
+				case std::byte{0x06}: // SHR Vx, Vy
 					instructions::shr_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x07}: // SUBN Vx, Vy
+				case std::byte{0x07}: // SUBN Vx, Vy
 					instructions::subn_reg_reg(this->m_registers, instr);
 					break;
 
-				case uint8_t{0x0E}: // SHL Vx, Vy
+				case std::byte{0x0E}: // SHL Vx, Vy
 					instructions::shl_reg_reg(this->m_registers, instr);
 					break;
 
@@ -253,11 +225,6 @@ void interpreter::process_machine_tick()
 
 		case std::byte{0xD}: // DRW Vx, Vy, nibble
 		{
-			auto wrap = [](size_t val, size_t limit)
-			{
-				return (val >= limit) ? (val - limit) : val;
-			};
-
 			this->m_registers.v[0xF] = std::byte{0x00};
 			const auto x_offset = std::to_integer<uint8_t>(this->m_registers.v[instructions::get_lower_nibble<size_t>(instr[0])]);
 			auto y_offset = std::to_integer<uint8_t>(this->m_registers.v[instructions::get_upper_nibble<size_t>(instr[1])]);

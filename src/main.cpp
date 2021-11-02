@@ -1,5 +1,5 @@
 #include "constants.hpp"
-#include "sdl_environment.hpp"
+#include "sdl/sdl_environment.hpp"
 #include "interpreter.hpp"
 
 #include "cxxopts.hpp"

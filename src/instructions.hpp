@@ -9,6 +9,7 @@
 #include <array>
 #include <cstddef>
 #include <concepts>
+#include <type_traits>
 
 namespace chip8::instructions
 {
@@ -20,6 +21,9 @@ namespace chip8::instructions
 	[[nodiscard]] instruction fetch(const std::array<std::byte, array_size>& mem, uint16_t pc);
 
 	template <std::integral T>
+	[[nodiscard]] constexpr T get_lower_nibble(std::byte byte) noexcept;
+
+	template <typename T> requires std::is_same_v<T, std::byte>
 	[[nodiscard]] constexpr T get_lower_nibble(std::byte byte) noexcept;
 
 	template <std::integral T>
@@ -103,7 +107,13 @@ namespace chip8
 	template <std::integral T>
 	constexpr T instructions::get_lower_nibble(std::byte byte) noexcept
 	{
-		return std::to_integer<T>(byte & std::byte{0x0F});
+		return std::to_integer<T>(instructions::get_lower_nibble<std::byte>(byte));
+	}
+
+	template <typename T> requires std::is_same_v<T, std::byte>
+	constexpr T instructions::get_lower_nibble(std::byte byte) noexcept
+	{
+		return byte & std::byte{0x0F};
 	}
 
 	template <std::integral T>

@@ -1,7 +1,7 @@
 #ifndef DISPLAY_HPP
 #define DISPLAY_HPP
 
-#include "sdl_window.hpp"
+#include "sdl/sdl_window.hpp"
 
 #include <SDL_surface.h>
 

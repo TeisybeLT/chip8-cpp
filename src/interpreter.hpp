@@ -1,11 +1,11 @@
 #ifndef INTERPRETER_HPP
 #define INTERPRETER_HPP
 
-#include "display.hpp"
 #include "registers.hpp"
 #include "timer.hpp"
 #include "types.hpp"
-#include "sdl_beeper.hpp"
+#include "sdl/sdl_beeper.hpp"
+#include "io/display.hpp"
 
 #include <SDL_events.h>
 
