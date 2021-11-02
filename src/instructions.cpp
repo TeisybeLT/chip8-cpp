@@ -17,6 +17,11 @@ namespace
 	}
 }
 
+void instructions::detail::throw_memory_access_error()
+{
+	throw std::out_of_range("Invalid memory access (address out of range)");
+}
+
 void instructions::rnd_reg_byte(chip8::registers& regs, instr_t instr) noexcept
 {
 	const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);

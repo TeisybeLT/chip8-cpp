@@ -33,6 +33,8 @@ namespace chip8::instructions
 	{
 		template <std::integral T>
 		[[nodiscard]] constexpr T get_lower_12_bits(instruction instr) noexcept;
+
+		[[noreturn]] void throw_memory_access_error();
 	}
 
 	constexpr void ret(chip8::registers& regs, stack_t& stack) noexcept;
@@ -92,7 +94,7 @@ namespace chip8
 		static constexpr auto instruction_size = std::tuple_size<instr_t>::value;
 
 		if (array_size < pc + instruction_size)
-			throw std::runtime_error("Out of bounds memory access");
+			detail::throw_memory_access_error();
 
 		instr_t instr;
 		std::copy_n(mem.begin() + pc, instruction_size, instr.begin());
@@ -299,7 +301,7 @@ namespace chip8
 	constexpr void instructions::ld_b_reg(chip8::registers& regs, std::array<std::byte, array_size>& mem, instr_t instr)
 	{
 		if (array_size < size_t{regs.i} + 3)
-			throw std::runtime_error("Out of bounds memory access");
+			detail::throw_memory_access_error();
 
 		auto number = std::to_integer<int>(regs.v[instructions::get_lower_nibble<size_t>(instr[0])]);
 		for (int idx = 2; idx >= 0; --idx)
@@ -314,7 +316,7 @@ namespace chip8
 	{
 		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
 		if (array_size < size_t{regs.i} + last_reg)
-			throw std::runtime_error("Out of bounds memory access");
+			detail::throw_memory_access_error();
 
 		std::copy(regs.v.begin(), regs.v.begin() + last_reg + 1, mem.begin() + size_t{regs.i});
 	}
@@ -324,7 +326,7 @@ namespace chip8
 	{
 		const auto last_reg = instructions::get_lower_nibble<size_t>(instr[0]);
 		if (array_size < size_t{regs.i} + last_reg)
-			throw std::runtime_error("Out of bounds memory access");
+			detail::throw_memory_access_error();
 
 		std::copy(mem.begin() + size_t{regs.i}, mem.begin() + size_t{regs.i} + last_reg + 1, regs.v.begin());
 	}
