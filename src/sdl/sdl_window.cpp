@@ -1,10 +1,10 @@
 #include "sdl_window.hpp"
+#include "errors/sdl_exception.hpp"
 
 #include <SDL_log.h>
 
-#include <stdexcept>
-
 using namespace sdl;
+using namespace std::literals::string_literals;
 
 window::window(const std::u8string& title, const SDL_Rect& window_rect)
 {
@@ -15,8 +15,8 @@ window::window(const std::u8string& title, const SDL_Rect& window_rect)
 	// Create window
 	this->m_window = SDL_CreateWindow(reinterpret_cast<const char*>(title.c_str()),
 		window_rect.x, window_rect.y, window_rect.w, window_rect.h, 0);
-	if (!this->m_window)
-		throw std::runtime_error("Failed to create window: " + std::string(SDL_GetError()));
+
+	sdl::sdl_check_null(this->m_window, "Failed to create window"s);
 }
 
 window::~window()
@@ -27,14 +27,12 @@ window::~window()
 
 SDL_Surface& window::get_window_surface() const
 {
-	if (auto window_surface = SDL_GetWindowSurface(this->m_window))
-		return *window_surface;
-	else
-		throw std::runtime_error("Failed to get window surface: " + std::string(SDL_GetError()));
+	auto window_surface = SDL_GetWindowSurface(this->m_window);
+	sdl::sdl_check_null(window_surface, "Failed to get window surface");
+	return *window_surface;
 }
 
 void window::update()
 {
-	if (SDL_UpdateWindowSurface(this->m_window))
-		throw std::runtime_error("Failed to update window: " + std::string(SDL_GetError()));
+	sdl::sdl_check_error(SDL_UpdateWindowSurface(this->m_window), "Failed to update window"s);
 }

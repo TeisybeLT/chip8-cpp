@@ -8,6 +8,7 @@ file(DOWNLOAD https://raw.githubusercontent.com/jarro2783/cxxopts/master/include
 )
 
 set(chip8_cpp_src
+	errors/sdl_exception.cpp
 	sdl/sdl_environment.cpp
 	sdl/sdl_window.cpp
 	sdl/sdl_beeper.cpp

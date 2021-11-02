@@ -1,20 +1,18 @@
 #include "sdl_environment.hpp"
+#include "errors/sdl_exception.hpp"
 
 #include <SDL.h>
 
-#include <stdexcept>
-
 using namespace sdl;
+using namespace std::literals::string_literals;
 
 environment::environment()
 {
 	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "SDL Initializing");
 
 	// Initialize video
-	if (SDL_InitSubSystem(SDL_INIT_VIDEO))
-		throw std::runtime_error("Unable to initialize SDL video: " + std::string(SDL_GetError()));
-	else
-		SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "SDL video init OK!");
+	sdl::sdl_check_error(SDL_InitSubSystem(SDL_INIT_VIDEO), "Unable to initialize SDL video"s);
+	SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "SDL video init OK!");
 
 	// Initialize audio
 	if (SDL_InitSubSystem(SDL_INIT_AUDIO))
