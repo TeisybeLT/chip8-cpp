@@ -9,6 +9,6 @@ namespace helpers
 
 	constexpr auto get_zero_instruction() noexcept
 	{
-		return instructions::instruction{std::byte{0x00}, std::byte{0x00}};
+		return instr_t{std::byte{0x00}, std::byte{0x00}};
 	}
 }

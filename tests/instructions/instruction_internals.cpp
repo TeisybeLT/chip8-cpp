@@ -5,7 +5,7 @@ using namespace chip8;
 
 TEST_CASE_TEMPLATE("Extracting lower 12 bits", T, uint16_t, int32_t, uint32_t, int32_t, size_t)
 {
-	instructions::instruction test_instr;
+	instr_t test_instr;
 
 	SUBCASE("All bits")
 	{

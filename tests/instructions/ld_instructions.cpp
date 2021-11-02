@@ -10,7 +10,7 @@ TEST_CASE("LD reg byte instruction")
 	static constexpr auto test_byte = std::byte{0x8F};
 
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x00}, test_byte};
+	auto instr = instr_t{std::byte{0x00}, test_byte};
 
 	for (size_t reg_idx = 0; reg_idx < regs.v.size(); ++reg_idx)
 	{
@@ -141,7 +141,7 @@ TEST_CASE("LD reg reg instruction")
 TEST_CASE("LD B reg instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{};
+	auto instr = instr_t{};
 	auto mem = std::array<std::byte, 6>{};
 	mem.fill(std::byte{0xFF});
 
@@ -191,7 +191,7 @@ TEST_CASE("LD B reg instruction")
 TEST_CASE("LD [I] reg instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x09}, std::byte{0x00}};
+	auto instr = instr_t{std::byte{0x09}, std::byte{0x00}};
 	auto mem = std::array<std::byte, 10>{};
 	mem.fill(std::byte{0xFF});
 
@@ -211,7 +211,7 @@ TEST_CASE("LD [I] reg instruction")
 TEST_CASE("LD reg [I] instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x09}, std::byte{0x00}};
+	auto instr = instr_t{std::byte{0x09}, std::byte{0x00}};
 	auto mem = std::array<std::byte, 10>{};
 	mem.fill(std::byte{0xFF});
 	regs.v.fill(std::byte{0xFF});

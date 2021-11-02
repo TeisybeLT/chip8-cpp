@@ -1,12 +1,13 @@
 #include "sdl_beeper.hpp"
+#include "errors/sdl_exception.hpp"
 
 #include <SDL_log.h>
 
 #include <cstring>
 #include <string>
-#include <stdexcept>
 
 using namespace sdl;
+using namespace std::literals::string_literals;
 
 namespace
 {
@@ -63,8 +64,7 @@ beeper::beeper(uint16_t freq, uint8_t amplitude)
 
 	this->m_audio_device = SDL_OpenAudioDevice(nullptr, 0, &desired, &obtained,
 		SDL_AUDIO_ALLOW_FREQUENCY_CHANGE);
-	if (!this->m_audio_device)
-		throw std::runtime_error("Unable to open audio device: " + std::string(SDL_GetError()));
+	sdl::sdl_check_error(this->m_audio_device, "Unable to open audio device"s);
 
 	this->m_sample_cache = generate_sample_cache(obtained, freq, amplitude);
 }

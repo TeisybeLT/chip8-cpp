@@ -3,6 +3,7 @@
 #include "chip8_font.hpp"
 #include "instructions.hpp"
 #include "io/rom.hpp"
+#include "errors/illegal_instruction_exception.hpp"
 
 #include <SDL_timer.h>
 #include <SDL_log.h>
@@ -103,11 +104,9 @@ void interpreter::process_machine_tick()
 {
 	const auto instr = instructions::fetch(this->m_mem, this->m_registers.pc);
 
-	auto throw_illegal_instruction = [&instr]
+	auto throw_illegal_instruction = [&]
 	{
-		auto str = std::ostringstream{"Illegal instruction: 0x", std::ios_base::ate};
-		str << std::hex << std::to_integer<int>(instr[0]) << std::to_integer<int>(instr[1]);
-		throw std::runtime_error(str.str()); 
+		throw illegal_instruction{this->m_registers, instr};
 	};
 
 	switch(instructions::extract_instruction_class(instr))

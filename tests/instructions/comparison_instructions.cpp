@@ -8,7 +8,7 @@ using namespace chip8;
 TEST_CASE("SE reg byte instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x00}, std::byte{0xFF}};
+	auto instr = instr_t{std::byte{0x00}, std::byte{0xFF}};
 
 	SUBCASE("All regs not equal")
 	{
@@ -35,7 +35,7 @@ TEST_CASE("SE reg byte instruction")
 TEST_CASE("SNE reg byte instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x00}, std::byte{0xFF}};
+	auto instr = instr_t{std::byte{0x00}, std::byte{0xFF}};
 
 	SUBCASE("All regs not equal")
 	{
@@ -62,7 +62,7 @@ TEST_CASE("SNE reg byte instruction")
 TEST_CASE("SE reg reg instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x00}, std::byte{0xFF}};
+	auto instr = instr_t{std::byte{0x00}, std::byte{0xFF}};
 
 	SUBCASE("All regs are same")
 	{
@@ -91,7 +91,7 @@ TEST_CASE("SE reg reg instruction")
 TEST_CASE("SNE reg reg instruction")
 {
 	auto regs = registers(0);
-	auto instr = instructions::instruction{std::byte{0x00}, std::byte{0xFF}};
+	auto instr = instr_t{std::byte{0x00}, std::byte{0xFF}};
 
 	SUBCASE("All regs are same")
 	{
