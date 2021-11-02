@@ -2,6 +2,7 @@
 
 #include "chip8_font.hpp"
 #include "instructions.hpp"
+#include "io/rom.hpp"
 
 #include <SDL_timer.h>
 #include <SDL_log.h>
@@ -11,45 +12,12 @@
 #include <chrono>
 #include <cstring>
 #include <functional>
-#include <fstream>
-#include <iomanip>
-#include <sstream>
 
 using namespace chip8;
 using namespace std::literals::string_literals;
 
 namespace
 {
-	void load_program_to_mem(const std::filesystem::path& rom_path,
-		chip8::memory_t& mem)
-	{
-		// Sanity check
-		if (!std::filesystem::exists(rom_path))
-			throw std::runtime_error("File does not exist at "s + rom_path.string());
-
-		if (!std::filesystem::is_regular_file(rom_path))
-			throw std::runtime_error(rom_path.string() + " does not point to a regular file"s);
-
-		// Load to mem
-		auto reader = std::ifstream(rom_path, std::ios_base::in | std::ios_base::binary |
-			std::ios_base::ate);
-		if (!reader)
-			throw std::runtime_error("Unable to open file "s + rom_path.string() + " for reading"s);
-
-		constexpr auto max_rom_size = chip8::constants::mem_size
-			- chip8::constants::code_start;
-		const auto file_byte_count = reader.tellg();
-		if (file_byte_count > max_rom_size)
-		{
-			throw std::runtime_error("Rom file is too large. Expected up to "s
-				+ std::to_string(max_rom_size) + " got "s + std::to_string(file_byte_count));
-		}
-
-		reader.seekg(0);
-		reader.read(reinterpret_cast<char*>(mem.data() + chip8::constants::code_start),
-			file_byte_count);
-	}
-
 	[[nodiscard]] inline auto calculate_tick_delta(std::chrono::time_point<std::chrono::high_resolution_clock>&
 		tick_time) noexcept
 	{
@@ -78,8 +46,8 @@ interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& int
 	);
 
 	// Set up memory
-	std::copy_n(chip8::font::raw_data.begin(), chip8::font::raw_data.size(), this->m_mem.begin());	
-	load_program_to_mem(rom_path, this->m_mem);
+	std::copy_n(chip8::font::raw_data.begin(), chip8::font::raw_data.size(), this->m_mem.begin());
+	chip8::load_rom_from_file(rom_path, this->m_mem);
 }
 
 void interpreter::run()

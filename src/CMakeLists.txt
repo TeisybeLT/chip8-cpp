@@ -13,6 +13,7 @@ set(chip8_cpp_src
 	sdl/sdl_beeper.cpp
 	io/input.cpp
 	io/display.cpp
+	io/rom.cpp
 	timer.cpp
 	instructions.cpp
 	interpreter.cpp
