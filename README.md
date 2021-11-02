@@ -33,7 +33,7 @@ If unit testing is desired, use an additional `-DBUILD_TESTS=On` flag for CMake.
 
 ### GNU/Linux
 
-Requirements (can be aquired from the package manager of your selected distro):
+Requirements (can be acquired from the package manager of your selected distro):
 * Cmake 3.15+
 * gcc 11.1+
 * SDL 2
@@ -50,3 +50,15 @@ make
 ```
 
 The resulting binary will be placed in `build/bin` directory.
+
+## Future plans
+
+Currently, my implementation of Chip 8 interpreter does everything I initially set out to do. Mainly - execute Chip 8 code. But in the future, if I regain my interest in this project, here's what I will do:
+
+* Proper versioning system
+* Windows, OSX and Web Assembly build targets
+* CI/CD integration with proper packaging and automated static analysis tool support
+* Super Chip 8 support
+* A small launcher GUI, so users don't have to muck around in terminal
+* Disassembler
+* Debugger
