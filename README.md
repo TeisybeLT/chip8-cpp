@@ -56,6 +56,7 @@ The resulting binary will be placed in `build/bin` directory.
 Currently, my implementation of Chip 8 interpreter does everything I initially set out to do. Mainly - execute Chip 8 code. But in the future, if I regain my interest in this project, here's what I will do:
 
 * Proper versioning system
+* Proper full screen support and other scaling types
 * Windows, OSX and Web Assembly build targets
 * CI/CD integration with proper packaging and automated static analysis tool support
 * Super Chip 8 support
