@@ -231,13 +231,13 @@ void interpreter::process_machine_tick()
 
 			for (size_t n_idx = this->m_registers.i; n_idx < n_end; ++n_idx)
 			{
-				auto sprite_line = std::bitset<8>(std::to_integer<uint8_t>(this->m_mem[n_idx]));
+				auto sprite_line = std::bitset<8>(std::to_integer<uint8_t>(this->m_mem.at(n_idx)));
 				auto x_offset_line = x_offset;
 
 				for (int bit_idx = sprite_line.size() - 1; bit_idx >= 0; --bit_idx)
 				{
 					const auto cur_idx = y_offset * this->m_display.get_width() + x_offset_line;
-					const auto prev_bit = bool{this->m_video_mem[cur_idx]};
+					const auto prev_bit = bool{this->m_video_mem.at(cur_idx)};
 					const auto new_bit = bool{sprite_line[bit_idx]};
 
 					this->m_video_mem[cur_idx] = prev_bit ^ new_bit;
