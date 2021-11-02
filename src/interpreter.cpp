@@ -24,6 +24,11 @@ namespace
 		tick_time = std::chrono::high_resolution_clock::now();
 		return std::chrono::duration_cast<std::chrono::nanoseconds>(tick_time - last_tick_time);
 	}
+
+	[[nodiscard]] inline auto wrap(size_t val, size_t limit)
+	{
+		return (val >= limit) ? (val - limit) : val;
+	};
 }
 
 interpreter::interpreter(const std::filesystem::path& rom_path, sdl::window& interpreter_window, sdl::beeper& beeper,
@@ -220,11 +225,6 @@ void interpreter::process_machine_tick()
 
 		case std::byte{0xD}: // DRW Vx, Vy, nibble
 		{
-			auto wrap = [](size_t val, size_t limit)
-			{
-				return (val >= limit) ? (val - limit) : val;
-			};
-
 			this->m_registers.v[0xF] = std::byte{0x00};
 			const auto x_offset = std::to_integer<uint8_t>(this->m_registers.v[instructions::get_lower_nibble<size_t>(instr[0])]);
 			auto y_offset = std::to_integer<uint8_t>(this->m_registers.v[instructions::get_upper_nibble<size_t>(instr[1])]);
