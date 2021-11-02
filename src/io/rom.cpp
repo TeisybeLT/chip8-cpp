@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <iomanip>
-#include <sstream>
+#include <system_error>
 
 using namespace std::literals::string_literals;
 using namespace chip8;
@@ -11,7 +11,10 @@ void chip8::load_rom_from_file(const std::filesystem::path& rom_path, chip8::mem
 {
 	// Sanity check
 	if (!std::filesystem::exists(rom_path))
-		throw std::runtime_error("File does not exist at "s + rom_path.string());
+	{
+		throw std::system_error(std::make_error_code(std::errc::no_such_file_or_directory),
+			"File does not exist at "s + rom_path.string());
+	}
 
 	if (!std::filesystem::is_regular_file(rom_path))
 		throw std::runtime_error(rom_path.string() + " does not point to a regular file"s);
@@ -25,8 +28,9 @@ void chip8::load_rom_from_file(const std::filesystem::path& rom_path, chip8::mem
 	const auto file_byte_count = reader.tellg();
 	if (file_byte_count > max_rom_size)
 	{
-		throw std::runtime_error("Rom file is too large. Expected up to "s
-			+ std::to_string(max_rom_size) + " got "s + std::to_string(file_byte_count));
+		throw std::system_error(std::make_error_code(std::errc::file_too_large),
+			"Rom file is too large. Expected up to "s + std::to_string(max_rom_size) +
+			" got "s + std::to_string(file_byte_count));
 	}
 
 	reader.seekg(0);
