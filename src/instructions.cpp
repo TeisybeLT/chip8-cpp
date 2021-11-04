@@ -27,7 +27,7 @@ void instructions::rnd_reg_byte(chip8::registers& regs, instr_t instr) noexcept
 	const auto x_offset = instructions::get_lower_nibble<size_t>(instr[0]);
 
 	auto engine = std::default_random_engine{std::random_device{}()};
-	auto random_number = std::uniform_int_distribution<unsigned short>(0, 255)(engine);
+	auto random_number = std::uniform_int_distribution<uint16_t>(0, 255)(engine);
 
 	regs.v[x_offset] = std::byte(random_number) & instr[1];
 }
