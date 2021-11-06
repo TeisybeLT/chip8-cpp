@@ -5,7 +5,7 @@ project(chip8-cpp CXX)
 option(BUILD_TESTS "Build unit tests" OFF)
 
 # Dependencies
-find_package(SDL2 REQUIRED)
+find_package(SDL2 CONFIG REQUIRED)
 include_directories(${SDL2_INCLUDE_DIRS})
 
 # Set up outpud directories

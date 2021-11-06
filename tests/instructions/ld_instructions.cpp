@@ -192,7 +192,7 @@ TEST_CASE("LD [I] reg instruction")
 {
 	auto regs = registers(0);
 	auto instr = instr_t{std::byte{0x09}, std::byte{0x00}};
-	auto mem = std::array<std::byte, 10>{};
+	auto mem = std::array<std::byte, 11>{};
 	mem.fill(std::byte{0xFF});
 
 	static constexpr auto test_regs = size_t{9};
@@ -212,7 +212,7 @@ TEST_CASE("LD reg [I] instruction")
 {
 	auto regs = registers(0);
 	auto instr = instr_t{std::byte{0x09}, std::byte{0x00}};
-	auto mem = std::array<std::byte, 10>{};
+	auto mem = std::array<std::byte, 11>{};
 	mem.fill(std::byte{0xFF});
 	regs.v.fill(std::byte{0xFF});
 
